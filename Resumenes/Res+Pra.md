@@ -2,22 +2,40 @@
 
 Este archivo conecta la teoria hasta Clase 8 con los notebooks de `Codigos`. Tambien incluyo los notebooks que aparecen como continuacion de Clase 9 o pronosticos, pero los marco como material posterior/complementario cuando exceden la teoria pedida hasta Clase 8.
 
-## Datasets faltantes para ejecutar todo
+## Estado de bases y reproducibilidad
 
-En el repo no hay archivos `.xlsx`, `.xls` ni `.csv`. Para correr todos los notebooks como estan, faltan estos datasets:
+Las bases fueron agregadas en `Bases de Datos MIA103/`. Eso ya permite interpretar mucho mejor los notebooks, pero hay un punto tecnico importante: varios notebooks leen archivos con nombres sueltos, por ejemplo `pd.read_excel("wheat.xlsx")`. Si el notebook se ejecuta desde `Codigos/`, o desde la raiz del repo, no va a encontrar automaticamente los archivos que estan dentro de `Bases de Datos MIA103/` salvo que se ajuste el path.
 
-- `CEO_ejemplo_multicolinealidad.xlsx`
-- `Ejemplo_Casa.xls`
-- `MIA103_Clase_2.xlsx`
-- `MIA103_Ejer_3_Datos.xlsx`
-- `SP500.xlsx`
-- `UK_rates.xlsx`
-- `ceo.xlsx`
-- `ejemplo.csv`
-- `wheat.xlsx`
-- `year_gdp_Argentina.csv`
+Estado exacto contra lo que espera el codigo:
 
-Sin esos archivos pude leer la logica de los notebooks, el codigo y las salidas guardadas, pero no puedo garantizar una ejecucion limpia de punta a punta.
+| Archivo esperado por notebooks | Estado actual |
+|---|---|
+| `CEO_ejemplo_multicolinealidad.xlsx` | Esta en `Bases de Datos MIA103/` |
+| `Ejemplo_Casa.xls` | Esta en `Bases de Datos MIA103/` |
+| `UK_rates.xlsx` | Esta en `Bases de Datos MIA103/` |
+| `ceo.xlsx` | Esta en `Bases de Datos MIA103/` |
+| `wheat.xlsx` | Esta en `Bases de Datos MIA103/` |
+| `SP500.xlsx` | No esta exacto; existe `SP500_.xlsx` |
+| `MIA103_Ejer_3_Datos.xlsx` | No esta exacto; `ibm.xlsx` parece cubrir la parte IBM/SP500/RF |
+| `MIA103_Clase_2.xlsx` | No esta exacto |
+| `year_gdp_Argentina.csv` | No esta exacto |
+| `ejemplo.csv` | No esta exacto |
+
+Bases adicionales cargadas que no aparecen llamadas directamente por los notebooks actuales:
+
+- `Precios_y_Dinero.xlsx`: contiene `MMYY`, `IPC`, `M` y `M_en_ARS`; parece material de precios/dinero o cointegracion posterior.
+- `Ejemplo 9a Engle Granger.csv`: contiene `date`, `ftse100`, `sp500_usd`, `fx`; sirve para Engle-Granger/cointegracion.
+- `mroz.xlsx` y `MROZ.pdf`: base y descripcion para modelos con variable dependiente dicotomica, probablemente Probit/Logit de Clase 9.
+- `UK_rates.dta`: version Stata de tasas UK, paralela a `UK_rates.xlsx`.
+
+Para que todos los notebooks corran sin tocar codigo, habria que copiar o enlazar las bases esperadas al directorio desde donde se ejecuta cada notebook. La alternativa mas prolija es editar los notebooks para usar un path comun, por ejemplo:
+
+```python
+DATA_DIR = "../Bases de Datos MIA103"
+df = pd.read_excel(f"{DATA_DIR}/wheat.xlsx")
+```
+
+En esta revision no cambie notebooks; el objetivo fue analizar y documentar.
 
 ## Mapa rapido notebook -> tema
 
@@ -39,6 +57,448 @@ Sin esos archivos pude leer la logica de los notebooks, el codigo y las salidas 
 | `MIA103_2026_Clase_07_Ejemplo_ADF_DFGLS.ipynb` | ADF, DFGLS, orden de integracion | 7 | `wheat.xlsx` |
 | `Forecast.ipynb` | Forecast AR(1)/ARIMA, in-sample/out-of-sample | Complemento | `wheat.xlsx` |
 | `MIA103 Clase 09 VECM.ipynb` | Johansen, VECM, cointegracion | Posterior a Clase 8/9 | `UK_rates.xlsx` |
+
+## Analisis tecnico general de los codigos
+
+Los notebooks tienen una estructura bastante consistente:
+
+```text
+imports -> carga de datos/simulacion -> transformaciones -> graficos -> estimacion -> interpretacion
+```
+
+Las librerias principales son:
+
+- `numpy`: simulacion, logaritmos, algebra, secuencias.
+- `pandas`: tablas, lectura de bases, transformaciones, retornos y rezagos.
+- `matplotlib` y `seaborn`: visualizacion.
+- `scipy.stats`: distribuciones, Jarque-Bera, valores criticos.
+- `statsmodels`: MCO, ARIMA, VAR, diagnosticos.
+- `arch.unitroot`: DFGLS.
+- `sklearn.linear_model`: aparece en ejercicios de regresion, aunque la inferencia principal se apoya en `statsmodels`.
+
+El paquete importante para interpretacion econometrica es `statsmodels`, porque devuelve no solo coeficientes sino errores estandar, `t`, `p-values`, `R^2`, F, diagnosticos y resultados especificos de series de tiempo.
+
+### Patron 1 - Transformaciones con rezagos
+
+Muchas operaciones descansan en alinear una observacion con su pasado:
+
+```python
+df["Return_pct"] = df["Adj Close"].pct_change()
+df["Return_log"] = np.log(df["Adj Close"] / df["Adj Close"].shift(1))
+```
+
+`pct_change()` calcula `P_t / P_{t-1} - 1`. `shift(1)` mueve la serie un periodo para construir manualmente el rezago. Despues de estas operaciones aparece un primer valor faltante, porque no hay dato previo para el primer periodo. Por eso suele venir:
+
+```python
+df = df.dropna()
+```
+
+Esto no es un detalle menor: en series de tiempo, perder una observacion por diferencias o rezagos es normal, pero hay que verificar que `X` e `y` queden alineados.
+
+### Patron 2 - Intercepto en `statsmodels`
+
+En `statsmodels`, el intercepto no se agrega solo si uno arma la matriz manualmente. Por eso aparece:
+
+```python
+X = sm.add_constant(x)
+modelo = sm.OLS(y, X).fit()
+```
+
+Si no se agrega la constante, el modelo queda sin intercepto. Eso cambia:
+
+- interpretacion de coeficientes;
+- residuos;
+- `R^2`;
+- tests de hipotesis.
+
+Este es uno de los puntos mas importantes para no equivocarse copiando codigo.
+
+### Patron 3 - Simulacion vs base real
+
+Hay notebooks autocontenidos, que simulan datos y corren sin bases externas:
+
+- `MIA103_2026_Clase_01_02_Mixtura.ipynb`
+- `MIA103_2026_Clase_02_Ejercicios_1_y_2.ipynb`
+- `MIA103_2026_Clase_03.ipynb`
+- `MIA103_2026_Clase_04_02_Notacion_Matricial.ipynb`
+- `MIA103_2026_Clase_06_Procesos_autorregresivos_ARMA.ipynb`
+
+Y hay notebooks aplicados que dependen de datos:
+
+- S&P500, IBM, PBI, casas, trigo, tasas UK.
+
+Para simulaciones conviene fijar semilla:
+
+```python
+np.random.seed(123)
+```
+
+Si no, los numeros cambian en cada corrida. La teoria no cambia, pero los resultados puntuales pueden variar.
+
+### Patron 4 - Graficos antes de estimar
+
+Los notebooks suelen graficar antes de correr tests o modelos. Eso esta bien: en series de tiempo, el grafico ayuda a detectar tendencia, quiebres, outliers, volatilidad cambiante y no estacionariedad.
+
+Pero el grafico no reemplaza al test. Por ejemplo, una serie con tendencia deterministica y una con raiz unitaria pueden verse parecidas. Por eso despues aparecen ADF/DFGLS.
+
+### Patron 5 - Outputs embebidos
+
+Los notebooks guardan muchas salidas. Eso permite leer resultados aunque falte una base o una libreria, pero tambien puede generar confusion: una salida embebida puede no corresponder a la ultima version del codigo si alguien edito una celda y no la volvio a ejecutar.
+
+Regla sana:
+
+```text
+Kernel -> Restart & Run All
+```
+
+y recien ahi confiar en los resultados.
+
+## Analisis notebook por notebook
+
+### `MIA103_2026_Clase_00_Intro_practica.ipynb`
+
+Es un notebook de infraestructura. El foco no es teoria econometrica sino aprender el flujo de trabajo: crear arrays, DataFrames, graficar y leer archivos.
+
+El punto tecnico a cuidar es `ejemplo.csv`: el codigo lo espera con ese nombre exacto. En las bases nuevas no aparece exacto.
+
+### `MIA103_2026_Clase_01_01.ipynb`
+
+Este notebook mezcla dos fuentes:
+
+```python
+df_archivo = pd.read_excel("SP500.xlsx", sheet_name=0)
+sp500 = yf.download("^GSPC", ...)
+```
+
+Primero intenta leer un Excel, pero despues descarga datos desde Yahoo Finance con `yfinance`. Eso implica dos cosas:
+
+- si no hay internet, la parte `yf.download()` puede fallar;
+- si se quiere usar solo la base subida, hay que adaptar el codigo a `SP500_.xlsx`.
+
+La base cargada `SP500_.xlsx` tiene hojas `Datos_SP500`, `Retornos`, `Estadisticas_Descriptivas` y `QQ-Plot`. La primera hoja trae `Date` y `Close`, no exactamente `Adj Close`. Entonces, para usarla con el codigo actual, habria que renombrar:
+
+```python
+df = pd.read_excel(DATA_DIR / "SP500_.xlsx", sheet_name=" Datos_SP500")
+df = df.rename(columns={"Close": "Adj Close"})
+```
+
+Analisis econometrico: el notebook hace bien el puente entre precios y retornos. Los precios suelen ser no estacionarios; los retornos suelen ser mucho mas cercanos a estacionarios. Por eso se calcula:
+
+```python
+Return_pct
+Return_log
+```
+
+El Jarque-Bera sobre retornos chequea si la distribucion es normal. En activos financieros, lo esperable muchas veces es rechazar normalidad por colas pesadas.
+
+### `MIA103_2026_Clase_01_02_Mixtura.ipynb`
+
+Es teorico-computacional y no depende de datos. Sirve para entender por que normalidad es una idealizacion.
+
+La parte valiosa es que no se queda solo en graficar normales: calcula momentos de una mixtura. Eso muestra que combinar poblaciones normales puede producir una distribucion con curtosis/asimetria distinta de una normal simple.
+
+Este notebook dialoga directamente con Jarque-Bera: si los retornos financieros son mezcla de regimes, shocks o volatilidades, la normal simple puede quedar corta.
+
+### `MIA103_2026_Clase_02_PBI_Argentina.ipynb`
+
+El codigo espera:
+
+```python
+df = pd.read_csv("year_gdp_Argentina.csv")
+```
+
+Ese archivo no aparece exacto en `Bases de Datos MIA103/`. Cuando este disponible, el notebook deberia producir:
+
+- grafico de PBI real en nivel;
+- `log_pbi`;
+- crecimiento logaritmico promedio;
+- tendencia por media movil;
+- ciclo como desvio respecto de tendencia;
+- HP filter.
+
+La linea clave:
+
+```python
+cycle, trend = hpfilter(df["log_pbi"], lamb=100)
+```
+
+Para datos anuales, `lambda=100` es una eleccion comun. Para datos trimestrales suele verse `1600`, y para mensuales valores mas altos. Esto hay que tenerlo presente: `lambda` depende de la frecuencia.
+
+### `MIA103_2026_Clase_02_Ejercicio_3.ipynb`
+
+Es la misma logica aplicada a PBI de USA. El codigo espera `MIA103_Clase_2.xlsx`, que no aparece exacto.
+
+Conceptualmente, es importante porque ayuda a ver que tendencia/ciclo no es una propiedad unica: depende de la economia, frecuencia, muestra y metodo de filtrado.
+
+### `MIA103_2026_Clase_03.ipynb`
+
+Es el notebook mas limpio para entender MCO desde simulacion:
+
+```python
+modelo = sm.OLS(y, x_matrix).fit()
+```
+
+Como los datos son simulados, se puede comparar:
+
+- parametro verdadero usado para generar datos;
+- estimacion MCO;
+- residuos;
+- salida de `summary()`.
+
+Este tipo de ejercicio es ideal para entender que `betahat` es aleatorio: si simulo otra muestra, cambia. La teoria de insesgadez dice que en promedio le pega al parametro, no que cada muestra individual sea exacta.
+
+### `MIA103_2026_Clase_03_Ejercicios.ipynb`
+
+El codigo espera:
+
+```python
+pd.read_excel("MIA103_Ejer_3_Datos.xlsx")
+```
+
+No esta exacto, pero `ibm.xlsx` parece contener la informacion necesaria: `IBM_price`, `S&P500_index` y `3mTB (RF) anualizada`.
+
+El bloque central:
+
+```python
+df["R_IBM"] = df["IBM"].pct_change()
+df["R_SP"] = df["SP500"].pct_change()
+df["Rf"] = (1 + df["3mTB"] / 100) ** (1 / 12) - 1
+df["Ribm-Rf"] = df["R_IBM"] - df["Rf"]
+df["Rsp-Rf"] = df["R_SP"] - df["Rf"]
+modelo = sm.OLS(y, X).fit()
+```
+
+Esto arma un CAPM empirico:
+
+```text
+R_IBM - R_f = alpha + beta (R_M - R_f) + u
+```
+
+Lectura:
+
+- `beta`: riesgo sistematico de IBM respecto del mercado.
+- `alpha`: exceso de retorno no explicado por el mercado.
+- test de `alpha = 0`: pregunta si hay rendimiento anormal.
+- test de `beta = 1`: pregunta si IBM se mueve uno a uno con el mercado.
+- `R^2`: cuanto del exceso de retorno de IBM explica el exceso de retorno del mercado.
+
+Punto tecnico bueno: anualiza/mensualiza la tasa libre de riesgo correctamente con potencia:
+
+```python
+(1 + tasa_anual) ** (1/12) - 1
+```
+
+No divide simplemente por 12, que seria una aproximacion.
+
+### `MIA103_2026_Clase_03_profundizacion.ipynb`
+
+Usa `ceo.xlsx`, que ahora esta cargado. La base tiene `Ganancias` y `Compensacion_CEO`.
+
+Este notebook es util para entender que una regresion simple aplicada puede tener buena interpretacion inicial pero tambien problemas:
+
+- relacion no lineal;
+- outliers;
+- heterocedasticidad;
+- variables omitidas.
+
+Por eso conecta naturalmente con Clase 4.
+
+### `MIA103_2026_Clase_04_01_Introduccion.ipynb`
+
+Usa `Ejemplo_Casa.xls`, que esta cargado, aunque para correrlo en Python hace falta soporte `xlrd`.
+
+El codigo usa regresiones multiples e interacciones:
+
+```python
+regmul = sm.OLS(y, X).fit()
+regpura = sm.OLS(...).fit()
+regprod = sm.OLS(...).fit()
+```
+
+Tambien usa dummies:
+
+```python
+X2 = pd.get_dummies(df_filtrado, columns=["BANOS"], drop_first=True, dtype=int)
+```
+
+Lectura conceptual:
+
+- Una dummy cambia interceptos entre grupos.
+- Una interaccion cambia pendientes entre grupos.
+- `drop_first=True` evita la trampa de dummies si hay constante.
+
+En regresion multiple, el analisis correcto no es "esta variable explica mucho sola", sino "esta variable aporta explicacion manteniendo constantes las demas".
+
+### `MIA103_2026_Clase_04_02_Notacion_Matricial.ipynb`
+
+Es un notebook de verificacion teorica. Muestra que MCO es algebra lineal:
+
+```text
+betahat = (X'X)^(-1) X'y
+```
+
+El valor pedagogico esta en comparar el resultado manual de NumPy contra `statsmodels`. Si coinciden, queda claro que `statsmodels` automatiza el calculo, no cambia la teoria.
+
+Riesgo tecnico: si `X'X` no es invertible, la formula falla. Ese fallo no es un bug de Python: es multicolinealidad perfecta.
+
+### `MIA103_2026_Clase_04_03_Multicolinealidad_Heteroscedasticidad.ipynb`
+
+Usa `CEO_ejemplo_multicolinealidad.xlsx` y `Ejemplo_Casa.xls`, ambos cargados.
+
+La base `CEO_ejemplo_multicolinealidad.xlsx` tiene `Gan`, `Gan_10` y `Comp`. `Gan_10` es una transformacion casi mecanica de `Gan`, por eso es ideal para mostrar multicolinealidad.
+
+El codigo de heterocedasticidad:
+
+```python
+white_test = sms.het_white(regre_casa.resid, regre_casa.model.exog)
+lm_stat, lm_pval, f_stat, f_pval = het_white(regre_casa.resid, X)
+bp_stat, bp_pval, _, _ = het_breuschpagan(regre_casa.resid, X)
+```
+
+Lectura:
+
+- Si `p-value` bajo en White/BP, rechazo homocedasticidad.
+- Si hay heterocedasticidad, los coeficientes MCO pueden seguir siendo razonables, pero la inferencia clasica queda sospechada.
+- Conviene comparar errores estandar convencionales vs robustos.
+
+Extension natural que podria agregarse al notebook:
+
+```python
+regre_casa.get_robustcov_results(cov_type="HC1")
+```
+
+Eso permitiria ver como cambian los `t` y `p-values`.
+
+### `MIA103_2026_Clase_06_Procesos_autorregresivos_ARMA.ipynb`
+
+Es autocontenido. Simula procesos AR, MA y ARMA:
+
+```python
+from statsmodels.tsa.arima_process import ArmaProcess
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+```
+
+El valor del notebook es entrenar el ojo:
+
+- AR: persistencia por rezagos de la propia variable.
+- MA: persistencia corta por shocks pasados.
+- ARMA: mezcla de ambos.
+
+Punto tecnico importante: `statsmodels` suele representar el polinomio AR con signo invertido. Para un AR(1) `y_t = rho y_{t-1} + e_t`, muchas funciones esperan algo como:
+
+```python
+ar = np.array([1, -rho])
+```
+
+Si se pone `+rho` por error, se simula otro proceso.
+
+### `MIA103_2026_Clase_07_Ejemplo_ADF_DFGLS.ipynb`
+
+Usa `wheat.xlsx`, ahora cargado. La base trae `yearmm`, `wheat_srw` y `wheat_hrw`.
+
+El flujo es correcto:
+
+```text
+serie en niveles -> ADF/DFGLS -> si no estacionaria, diferencia -> nuevo test
+```
+
+Lineas clave:
+
+```python
+test = adfuller(y, regression="c", autolag="t-stat")
+test_adf_ct = adfuller(y, regression="ct", autolag="t-stat", regresults=True)
+dfgls_ct = DFGLS(y, trend="ct")
+```
+
+La parte mas sofisticada del notebook es que no solo llama `adfuller`; tambien arma la regresion auxiliar OLS del ADF. Eso ayuda a entender que el test no es magia: es una regresion sobre diferencias, nivel rezagado, componentes deterministicos y rezagos de diferencias.
+
+Riesgo practico: para `DFGLS` hace falta el paquete `arch`.
+
+### `Forecast.ipynb`
+
+Tambien usa `wheat.xlsx`. Estima:
+
+```python
+ARIMA(y, order=(1,0,0))
+```
+
+Eso es un AR(1) en la implementacion moderna de `statsmodels`. El notebook compara prediccion dentro de muestra y fuera de muestra.
+
+Lectura teorica:
+
+- In-sample sirve para ver ajuste, pero puede ser optimista.
+- Out-of-sample evalua capacidad predictiva real.
+- Si el AR(1) es estacionario, los pronosticos de largo plazo convergen a la media incondicional.
+
+### `MIA103 Clase 09 VECM.ipynb`
+
+Es posterior al pedido "hasta clase 8", pero usa directamente la puerta que abre la Clase 8.
+
+La base `UK_rates.xlsx` esta cargada y contiene `dates`, `mth1`, ..., `mth12`, o sea tasas por distintos vencimientos.
+
+El flujo:
+
+```python
+test = adfuller(serie, regression="ct", autolag="t-stat")
+test = DFGLS(rates[mes].dropna(), trend="ct")
+var_model = VAR(rates)
+lag_order_results = var_model.select_order(maxlags=12)
+jres = coint_johansen(rates, det_order=1, k_ar_diff=4)
+vecm = VECM(rates, k_ar_diff=4, coint_rank=rank, deterministic="colo")
+```
+
+La secuencia esta bien planteada:
+
+1. Ver si las tasas son `I(1)`.
+2. Ver si las diferencias son `I(0)`.
+3. Elegir rezagos como VAR.
+4. Usar Johansen para rango de cointegracion.
+5. Estimar VECM si hay cointegracion.
+6. Hacer diagnosticos de residuos.
+
+Punto conceptual clave: en VECM, `k_ar_diff` es un rezago menos que el VAR en niveles. Si el VAR elegido es `p`, el VECM usa `p - 1` rezagos en diferencias.
+
+## Recomendaciones practicas para dejar el repo mas ejecutable
+
+Si la idea es usar estos notebooks durante la cursada, conviene hacer una de estas dos cosas:
+
+1. Editar cada notebook para que lea desde `Bases de Datos MIA103/`.
+2. Crear copias o enlaces con los nombres exactos que esperan los notebooks.
+
+Mi recomendacion es la primera, porque deja clara la organizacion del repo. Un patron simple:
+
+```python
+from pathlib import Path
+
+DATA_DIR = Path("../Bases de Datos MIA103")
+df = pd.read_excel(DATA_DIR / "wheat.xlsx")
+```
+
+Si se ejecuta desde la raiz del repo, el path seria:
+
+```python
+DATA_DIR = Path("Bases de Datos MIA103")
+```
+
+Tambien conviene tener una celda inicial de dependencias:
+
+```python
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+```
+
+y, cuando corresponda:
+
+```python
+from arch.unitroot import DFGLS
+```
+
+En este entorno de revision, `pandas` esta instalado, pero no estaban disponibles `openpyxl` y `xlrd`, que son necesarios para leer `.xlsx` y `.xls` con `pandas`. En una maquina local, eso se arregla con:
+
+```bash
+pip install openpyxl xlrd arch
+```
 
 ## Practica 0 - Herramientas basicas
 
@@ -427,5 +887,4 @@ La correspondencia principal queda asi:
 - Estacionariedad, ADF, DFGLS: Clase 7 -> wheat, orden de integracion.
 - VAR, autovalores, Granger, cointegracion inicial: Clase 8 -> puente hacia VECM y forecast.
 
-Lo unico que no puedo chequear completamente todavia es la ejecucion reproducible de notebooks que dependen de archivos externos. Para cerrar esa parte, conviene agregar los datasets listados arriba a una carpeta de datos o al mismo directorio donde los notebooks esperan encontrarlos.
-
+Con las bases nuevas, la interpretacion de los codigos queda mucho mas completa. Lo que todavia falta para una ejecucion reproducible perfecta es alinear paths/nombres exactos y asegurar dependencias (`openpyxl`, `xlrd`, `arch`). La teoria y el codigo matchean bien: los notebooks implementan las transformaciones y modelos que aparecen en las clases, y los materiales de Clase 9/VECM son una continuacion natural de lo que Clase 8 deja planteado.

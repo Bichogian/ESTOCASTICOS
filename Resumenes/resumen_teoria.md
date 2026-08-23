@@ -543,3 +543,276 @@ Cuando `Pi` tiene rango reducido, puede factorizarse en vectores que representan
 
 Es una nocion estadistica de poder predictivo, no causalidad estructural o causalidad economica profunda.
 
+## Capa de profundizacion teorica
+
+Esta seccion agrega una lectura mas conceptual de los mismos temas. La idea es tener no solo "que formula usar", sino tambien por que aparece, que supuesto sostiene cada resultado y donde suelen aparecer errores.
+
+### 1. Retornos: por que existen dos definiciones
+
+El retorno simple es natural para medir ganancia economica:
+
+```text
+R_t = P_t / P_{t-1} - 1
+```
+
+Si una inversion sube de 100 a 110, el retorno simple es 10%. Si baja de 100 a 90, es -10%. Esta es la metrica mas directa para performance.
+
+El retorno logaritmico se usa porque convierte productos en sumas:
+
+```text
+r_t = ln(1 + R_t)
+```
+
+Si quiero acumular muchos periodos, el retorno bruto simple exige multiplicar:
+
+```text
+P_T / P_0 = (1 + R_1)(1 + R_2)...(1 + R_T)
+```
+
+Tomando logaritmos:
+
+```text
+ln(P_T / P_0) = r_1 + r_2 + ... + r_T
+```
+
+Por eso los log-retornos son tan comodos en series financieras. La desventaja es interpretativa: el retorno logaritmico no es exactamente el porcentaje de plata ganada. Para cambios chicos son casi iguales, pero para cambios grandes no.
+
+Una idea importante para riesgo: los log-retornos penalizan mas las caidas que las subas equivalentes. Por ejemplo, `ln(0.75)` tiene mayor magnitud negativa que `ln(1.25)` positiva. Eso vuelve a los log-retornos utiles cuando importa la cola izquierda.
+
+### 2. Momentos: que informacion agrega cada uno
+
+La media resume centro, pero no riesgo. Dos activos pueden tener la misma media y volatilidades muy distintas.
+
+La varianza mide dispersion promedio cuadratica. Como eleva al cuadrado, castiga fuerte observaciones alejadas. El desvio estandar vuelve a la unidad original.
+
+La asimetria dice si la distribucion tiene cola mas pesada a un lado. En finanzas, asimetria negativa suele ser preocupante: implica posibilidad de perdidas grandes aun si la media es razonable.
+
+La curtosis mide peso de colas. Una curtosis alta implica mas observaciones extremas que una normal. Por eso una distribucion con igual media y varianza que una normal puede ser mucho mas riesgosa si tiene exceso de curtosis positivo.
+
+Jarque-Bera combina asimetria y curtosis para testear normalidad. Si se rechaza normalidad, no significa que el modelo sea inutil, pero si alerta que inferencia exacta basada en normalidad puede ser fragil.
+
+### 3. Tendencia y ciclo: no son objetos observados
+
+En macroeconomia se habla de tendencia y ciclo como si fueran cosas visibles, pero en realidad son una descomposicion construida:
+
+```text
+y_t = tendencia_t + ciclo_t
+```
+
+Distintos metodos producen distintas tendencias:
+
+- Una tendencia lineal impone crecimiento constante en logaritmos.
+- Una media movil deja que la tendencia cambie lentamente, pero depende de la ventana.
+- HP filter elige una tendencia suave resolviendo un problema de optimizacion.
+
+El ciclo no "existe" independientemente del metodo: es lo que queda luego de definir tendencia. Esto importa en examenes y analisis empirico: siempre hay que decir como se extrajo el ciclo.
+
+En series en logaritmos, diferencias aproximan tasas de crecimiento:
+
+```text
+Delta ln(y_t) ~= tasa de crecimiento
+```
+
+Por eso muchas series macro se grafican y modelan en logaritmos.
+
+### 4. MCO: que minimiza y que no promete
+
+MCO minimiza residuos cuadrados:
+
+```text
+sum e_i^2
+```
+
+Eso garantiza el mejor ajuste lineal dentro de la muestra segun ese criterio. Pero no garantiza automaticamente causalidad, ni que los errores estandar sean validos, ni que el modelo este bien especificado.
+
+El estimador de pendiente en regresion simple:
+
+```text
+betahat = Covhat(X,Y) / Varhat(X)
+```
+
+explica por que `beta` depende de la covariacion entre `X` e `Y`, escalada por la variabilidad de `X`. Si `X` casi no varia, estimar su efecto es dificil.
+
+Para insesgadez, el supuesto profundo no es normalidad sino exogeneidad:
+
+```text
+E(u_i | X_i) = 0
+```
+
+En las notas aparece como `E(u_i)=0` con `X` tratada como dada. La lectura econometrica mas fuerte es que el error no debe estar sistematicamente relacionado con los regresores.
+
+Si falta una variable relevante correlacionada con `X`, el error absorbe esa variable y `X` queda correlacionada con el error. Ahi aparece sesgo por variable omitida.
+
+### 5. Error estandar vs coeficiente
+
+El coeficiente mide magnitud estimada. El error estandar mide incertidumbre de esa estimacion.
+
+Un coeficiente puede ser economicamente grande pero estadisticamente impreciso si su error estandar es grande. El estadistico `t` combina ambas cosas:
+
+```text
+t = estimacion / error estandar
+```
+
+Por eso multicolinealidad no necesariamente cambia mucho los coeficientes, pero puede inflar errores estandar y hacer que los `t` caigan.
+
+### 6. R^2 no es causalidad ni validez
+
+`R^2` mide proporcion de variabilidad de `Y` explicada dentro de la muestra. No dice:
+
+- que el modelo sea causal;
+- que no haya sesgo;
+- que el modelo pronostique bien fuera de muestra;
+- que los errores estandar sean correctos.
+
+En series de tiempo no estacionarias, incluso puede aparecer un `R^2` alto en una regresion espuria. Por eso estacionariedad y orden de integracion se vuelven tan importantes mas adelante.
+
+### 7. Regresion multiple: interpretacion "ceteris paribus"
+
+En regresion multiple:
+
+```text
+y_i = alpha + beta_1 x_{1i} + beta_2 x_{2i} + u_i
+```
+
+`beta_1` mide el cambio esperado en `y` ante un cambio en `x_1`, manteniendo fijo `x_2`. Esa frase "manteniendo fijo" es lo que distingue regresion multiple de simple.
+
+Si `x_1` y `x_2` estan correlacionadas, agregar `x_2` puede cambiar mucho `betahat_1`, porque ahora `x_1` solo recibe la parte de variacion que no esta compartida con `x_2`.
+
+Una forma intuitiva de pensar el coeficiente parcial es:
+
+1. Limpiar `x_1` de lo que explica `x_2`.
+2. Limpiar `y` de lo que explica `x_2`.
+3. Regresar el residuo de `y` contra el residuo de `x_1`.
+
+Eso es equivalente a MCO multiple y ayuda a entender el efecto parcial.
+
+### 8. Multicolinealidad: problema de informacion, no de sesgo
+
+La multicolinealidad perfecta impide estimar porque dos columnas de `X` contienen la misma informacion lineal. `X'X` no se puede invertir.
+
+La multicolinealidad alta no rompe MCO, pero reduce precision. El modelo tiene dificultad para separar que parte del efecto pertenece a cada variable. Por eso:
+
+- el `R^2` puede ser alto;
+- el F global puede ser significativo;
+- los `t` individuales pueden ser bajos.
+
+La solucion no es automatica. A veces se acepta si el objetivo es prediccion; si el objetivo es interpretar coeficientes individuales, puede ser grave.
+
+### 9. Heterocedasticidad: el problema esta en la inferencia
+
+Con heterocedasticidad:
+
+```text
+Var(u_i | X_i) = sigma_i^2
+```
+
+Si la exogeneidad se mantiene, MCO puede seguir siendo insesgado. El problema es que las formulas usuales de varianza de los estimadores dejan de ser validas.
+
+Consecuencia: los `t`, `p-values` e intervalos de confianza convencionales pueden estar mal.
+
+Respuestas practicas:
+
+- usar errores estandar robustos;
+- modelar la varianza y usar WLS/GLS/FGLS;
+- revisar si la forma funcional esta mal especificada.
+
+White es general pero puede perder poder si hay muchos terminos. Breusch-Pagan es mas dirigido. Goldfeld-Quandt sirve si hay una variable por la cual sospechamos que crece la varianza.
+
+### 10. Series de tiempo: dependencia temporal como objeto central
+
+En datos cross-section, muchas veces se empieza suponiendo independencia entre observaciones. En series de tiempo, el pasado informa sobre el presente. Esa dependencia es justamente lo que queremos modelar.
+
+Un ruido blanco no es "cualquier ruido": debe tener media cero, varianza constante y no autocorrelacion. Es el bloque basico que queda luego de modelar toda la estructura temporal sistematica.
+
+Un AR(1):
+
+```text
+y_t = rho y_{t-1} + epsilon_t
+```
+
+es estacionario si `|rho| < 1`. Si `rho` esta cerca de 1, los shocks son muy persistentes. Si `rho = 1`, el proceso es random walk:
+
+```text
+y_t = y_{t-1} + epsilon_t
+```
+
+En un random walk, los shocks tienen efecto permanente y la varianza crece con el horizonte. Por eso no es estacionario.
+
+### 11. ACF y PACF: lectura practica
+
+La ACF responde: cuanto se parece la serie a sus propios rezagos.
+
+La PACF responde: cuanto aporta un rezago especifico despues de controlar por los rezagos anteriores.
+
+Regla orientativa:
+
+- AR(p): PACF corta en `p`, ACF decae.
+- MA(q): ACF corta en `q`, PACF decae.
+- ARMA(p,q): ACF y PACF decaen.
+
+No es una regla mecanica perfecta, pero ayuda a elegir modelos candidatos.
+
+### 12. Raiz unitaria: por que no alcanza mirar el grafico
+
+Una serie con tendencia deterministica y una serie con raiz unitaria pueden verse parecidas. Pero se estacionarizan distinto:
+
+- Tendencia deterministica: se remueve estimando una tendencia.
+- Raiz unitaria: se toman diferencias.
+
+Confundirlas cambia todo el analisis. Si diferencias una serie trend-stationary, podes eliminar informacion de largo plazo innecesariamente. Si solo sacas tendencia a una serie con raiz unitaria, puede seguir siendo no estacionaria.
+
+ADF testea raiz unitaria. Bajo la nula, la distribucion del estadistico no es una `t` convencional. Por eso hay valores criticos especiales.
+
+### 13. Orden de integracion y regresion espuria
+
+Si dos variables son `I(1)` y no estan cointegradas, una regresion en niveles puede mostrar alto `R^2` y t-statistics aparentemente significativos aunque no haya relacion real. Eso es regresion espuria.
+
+Por eso el flujo correcto en series temporales es:
+
+```text
+graficar -> testear raiz unitaria -> decidir niveles/diferencias -> estimar -> diagnosticar residuos
+```
+
+Si las variables son `I(0)`, se puede trabajar en niveles. Si son `I(1)` y no cointegradas, normalmente se trabaja con diferencias. Si son `I(1)` y cointegradas, aparece el modelo de correccion de errores.
+
+### 14. VAR: sistema dinamico, no una sola ecuacion
+
+Un VAR trata todas las variables como endogenas. Cada variable depende de sus propios rezagos y de los rezagos de las demas.
+
+La estabilidad del VAR depende de autovalores. Si el sistema es estable, los shocks se disipan. Si hay autovalores unitarios, los shocks pueden tener efectos permanentes.
+
+Granger causality pregunta si los rezagos de una variable mejoran el pronostico de otra. No prueba causalidad estructural. Es una nocion de contenido predictivo.
+
+La idea de cointegracion que aparece en Clase 8 es clave: puede haber variables individualmente no estacionarias, pero una combinacion lineal estacionaria. Eso significa que hay una relacion de largo plazo que ata a las series entre si.
+
+### 15. Guia de decision rapida
+
+Para datos financieros de precios:
+
+```text
+precios -> log(precios) -> retornos logaritmicos -> analizar distribucion/volatilidad
+```
+
+Para variables macro en niveles:
+
+```text
+niveles -> logs -> tendencia/ciclo o test de raiz unitaria -> diferencias si I(1)
+```
+
+Para regresion cross-section:
+
+```text
+MCO -> interpretar coeficientes -> revisar t/F/R^2 -> diagnosticar multicolinealidad y heterocedasticidad
+```
+
+Para series de tiempo univariadas:
+
+```text
+graficar -> ACF/PACF -> estacionariedad -> AR/MA/ARMA/ARIMA -> diagnostico de residuos
+```
+
+Para varias series temporales:
+
+```text
+testear integracion -> VAR si I(0) -> Johansen/VECM si I(1) cointegradas -> Granger/forecast/diagnosticos
+```
