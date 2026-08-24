@@ -1,0 +1,15 @@
+# Entorno para los notebooks de MIA103 / Estocasticos
+jupyterlab
+notebook
+ipykernel
+numpy
+pandas
+openpyxl
+xlrd
+scipy
+matplotlib
+seaborn
+statsmodels
+scikit-learn
+arch
+yfinance

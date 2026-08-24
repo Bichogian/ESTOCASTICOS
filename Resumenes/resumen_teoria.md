@@ -1,6 +1,33 @@
 # Resumen teoria - Modelado Estocastico hasta Clase 8
 
-Este resumen cubre la teoria disponible en la carpeta `Clases` hasta la Clase 8. En la carpeta no aparece un PDF de Clase 5; por eso el orden observado es Clase 1, 2, 3, 4, 6, 7 y 8. El apunte de `Pronosticos` y los materiales de Clase 9 quedan fuera del nucleo "hasta Clase 8", salvo como continuidad natural de ARIMA/VAR.
+Este resumen cubre la teoria disponible en la carpeta `Clases` hasta la Clase 8. Las clases 4 y 5 comparten `MIA103_Clase_4.pdf` y la serie de notebooks `04_01`, `04_02` y `04_03`; por eso se presentan como un unico bloque. El apunte de `Pronosticos` y los materiales de Clase 9 quedan fuera del nucleo "hasta Clase 8", salvo como continuidad natural de ARIMA/VAR.
+
+## Mapa de clases, temas y notebooks
+
+Este mapa conecta el material teorico, los codigos y las practicas. La numeracion de los notebooks no siempre coincide exactamente con la clase: algunos codigos abarcan mas de una clase y ciertos temas posteriores funcionan como continuacion de los anteriores.
+
+| Etapa | Material teorico | Notebook principal | Practica | Temas principales |
+|---|---|---|---|---|
+| Introduccion | Sin PDF especifico | `MIA103_2026_Clase_00_Intro_practica.ipynb` | Sin practica especifica | Jupyter, NumPy, pandas, graficos, lectura de archivos y simulacion |
+| Clase 1 | `MIA103_Clase_1.pdf` | `MIA103_2026_Clase_01_01.ipynb` y `MIA103_2026_Clase_01_02_Mixtura.ipynb` | `MIA103_Ejer_1.pdf` y `MIA103_Ejer_1_Sol.pdf` | Retornos simples y logaritmicos, estadisticos descriptivos, momentos, normalidad, Jarque-Bera y mixtura de normales |
+| Clase 2 | `MIA103_Clase_2.pdf` | `MIA103_2026_Clase_02_PBI_Argentina.ipynb`, `MIA103_2026_Clase_02_Ejercicio_3.ipynb` y `MIA103_2026_Clase_02_Ejercicios_1_y_2.ipynb` | `MIA103_Ejer_2.pdf` | PBI, crecimiento, logaritmos, tendencia, ciclo, medias moviles, filtro HP y bootstrap |
+| Clase 3 | `MIA103_Clase_3.pdf` | `MIA103_2026_Clase_03.ipynb`, `MIA103_2026_Clase_03_Ejercicios.ipynb` y `MIA103_2026_Clase_03_profundización.ipynb` | `MIA103_Ejer_3.pdf` | Regresion lineal simple, MCO, coeficientes, residuos, R cuadrado, inferencia, intervalos y CAPM |
+| Clases 4 y 5 | `MIA103_Clase_4.pdf` | `MIA103_2026_Clase_04_01_Introducción.ipynb`, `MIA103_2026_Clase_04_02_Notación_Matricial.ipynb` y `MIA103_2026_Clase_04_03_Multicolinealidad_Heteroscedasticidad.ipynb` | `MIA103_Ejer_4.pdf` | Regresion multiple, tests t y F, dummies, interacciones, MCO matricial, multicolinealidad, heterocedasticidad y tests de diagnostico |
+| Clase 6 | `MIA103_Clase_6.pdf` | `MIA103_2026_Clase_06_Procesos_autorregresivos_ARMA.ipynb` | `MIA103_Ejer_5_.pdf` y `MIA103_2026_Clase_06_Resolución_Ejercitación_5.ipynb` | Series temporales, ruido blanco, AR, MA, ARMA, ACF y PACF |
+| Clase 7 | `MIA103_Clase_7_.pdf` | `MIA103_2026_Clase_07_Ejemplo_ADF_DFGLS.ipynb` | `MIA103_Ejer_7_.pdf` | Estacionariedad, raices unitarias, ADF, DFGLS, seleccion de rezagos y orden de integracion |
+| Clase 8 | `MIA103_Clase_8_VAR_.pdf` | No hay un notebook VAR especifico | Sin practica identificada | VAR, estabilidad, autovalores, causalidad de Granger y puente hacia cointegracion |
+| Pronosticos | `Pronosticos MIA103 Anual 2026.pdf` | `Forecast.ipynb` | Sin practica especifica | Modelos AR/ARIMA y pronosticos dentro y fuera de muestra |
+| Clase 9 - VECM | `MIA103_Clase_9_Anual 2026.pdf` | `MIA103 Clase 09 VECM.ipynb` | Sin practica especifica | Cointegracion, Johansen, seleccion de rezagos, VECM y diagnosticos |
+| Clase 9 - Probit/Logit | `MIA103_Clase_9_Probit_Logit.pdf` | No hay un notebook especifico | Base `mroz.xlsx` | Variable dependiente binaria y modelos Probit y Logit |
+
+### Flujo de revision por clase
+
+1. Leer el PDF de la clase y reconocer sus conceptos centrales.
+2. Ejecutar el notebook correspondiente, siguiendo las transformaciones y estimaciones celda por celda.
+3. Comparar la clase y el codigo con este resumen teorico.
+4. Corregir o ampliar las definiciones, supuestos, formulas e interpretaciones que falten.
+5. Mejorar `Res+Pra.md` con la implementacion, los resultados y su relacion con la teoria.
+6. Marcar los puntos que requieran datos, correcciones de rutas o una revision posterior.
 
 ## Clase 1 - Retornos, distribuciones y momentos
 
@@ -229,7 +256,7 @@ t = (betahat - beta_0) / se(betahat)
 
 Se rechaza `H0` si el estadistico cae en la region critica o si el `p-value` es menor que el nivel de significatividad elegido.
 
-## Clase 4 - Regresion multiple, tests F, dummies y problemas de especificacion
+## Clases 4 y 5 - Regresion multiple, tests F, dummies y problemas de especificacion
 
 La regresion multiple agrega mas variables explicativas:
 
