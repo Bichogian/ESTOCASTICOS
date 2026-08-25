@@ -16,9 +16,9 @@ microteoria -> en Python lo hacemos asi -> salida del ejemplo -> que significa -
 | 2 | PBI, crecimiento, logaritmos, tendencia, ciclo, medias moviles y HP | Completa | [Abrir Clase 2](Teoria_y_Practica/Clase_02.md) |
 | 3 | Regresion lineal simple, MCO, inferencia, CAPM y prediccion | Completa | [Abrir Clase 3](Teoria_y_Practica/Clase_03.md) |
 | 4 y 5 | Regresion multiple, MCO matricial, multicolinealidad, heterocedasticidad y errores robustos | Completa | [Abrir Clases 4 y 5](Teoria_y_Practica/Clase_04_y_05.md) |
-| 6 | Ruido blanco, AR, MA y ARMA | Pendiente | Se creara durante la revision |
-| 7 | Estacionariedad, ADF y DFGLS | Pendiente | Se creara durante la revision |
-| 8 | VAR y causalidad de Granger | Pendiente | Se creara durante la revision |
+| 6 | Ruido blanco, AR, MA, ARMA, ACF/PACF y random walk | Completa | [Abrir Clase 6](Teoria_y_Practica/Clase_06.md) |
+| 7 | Estacionariedad, raices unitarias, ADF, DFGLS, integracion y cointegracion inicial | Completa | [Abrir Clase 7](Teoria_y_Practica/Clase_07.md) |
+| 8 | VAR, estabilidad, VEC, cointegracion inicial y causalidad de Granger | Completa | [Abrir Clase 8](Teoria_y_Practica/Clase_08.md) |
 | Pronosticos | Forecast dentro y fuera de muestra | Pendiente | Se creara durante la revision |
 | 9 | Cointegracion y VECM | Pendiente | Se creara durante la revision |
 | 9 adicional | Probit y Logit | Pendiente | Se creara durante la revision |
