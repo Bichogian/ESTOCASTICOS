@@ -1,1332 +1,1100 @@
-# Clase 7 - Teoria + practica + Python
+# Clase 7 - Estacionariedad, raices unitarias, ADF y cointegracion
 
 [Volver al indice general](../Res+Pra.md)
 
-Esta guia cruza la teoria de la Clase 7 con el notebook de ADF/DFGLS. El
-objetivo central es aprender a decidir si una serie es estacionaria, si necesita
-diferenciarse y como interpretar tests de raiz unitaria.
+Mapa completo de la Clase 7: teoria del PDF, codigo del notebook de ADF/DFGLS y
+Ejercitacion 6. Cada tema sigue el mismo recorrido:
 
-La clase tambien introduce operador de rezagos, condiciones de estacionariedad
-en AR/MA/ARMA, impulso-respuesta y una primera idea de cointegracion. La
-`Ejercitacion 7` por nombre trata VAR y causalidad de Granger; por contenido
-corresponde mejor al bloque de Clase 8, asi que queda senalada como puente.
+$$\text{teoria} \;\rightarrow\; \text{para que sirve} \;\rightarrow\; \text{codigo generico} \;\rightarrow\; \text{como leer la salida}$$
 
-El recorrido de cada tema es:
-
-```text
-microteoria -> en Python lo hacemos asi -> salida del ejemplo -> que significa -> idea para recordar
-```
-
-## Archivos que vamos a usar
+## Archivos de esta clase
 
 | Tipo | Archivo | Para que se usa |
 |---|---|---|
-| Teoria | `Clases/MIA103_Clase_7_.pdf` | Estacionariedad, ADF, DFGLS, rezagos, raices, ARMA, impulso-respuesta y cointegracion inicial |
-| Python | `Codigos/MIA103_2026_Clase_07_Ejemplo_ADF_DFGLS.ipynb` | Aplicacion ADF/DFGLS al precio del trigo |
-| Datos | `Bases de Datos MIA103/wheat.xlsx` | Precio mensual del trigo `wheat_srw` y `wheat_hrw` |
-| Practica puente | `Practicas/MIA103_Ejer_7_.pdf` | VAR y causalidad de Granger; se trabajara con Clase 8 |
+| Teoria | `Clases/MIA103_Clase_7_.pdf` | Estacionariedad, ADF, operador de rezagos, IRF, cointegracion |
+| Python | `Codigos/MIA103_2026_Clase_07_Ejemplo_ADF_DFGLS.ipynb` | ADF y DFGLS sobre el precio del trigo |
+| Practica | `Practicas/MIA103_Ejer_6_.pdf` | Orden de integracion de precios y dinero |
+| Resuelta | `Practicas_Resueltas/Respuestas_6.ipynb` | Resolucion propia |
+| Datos | `Bases de Datos MIA103/wheat.xlsx` | Precio mensual del trigo (Pink Sheet, Banco Mundial) |
+| Datos | `Bases de Datos MIA103/Precios_y_Dinero.xlsx` | IPC y base monetaria para la practica |
+| Puente | `Practicas/MIA103_Ejer_7_.pdf` | VAR y Granger: se trabaja en la [Clase 8](Clase_08.md) |
 
-## Que notebook usamos para cada tema
+## Mapa tema - PDF - notebook - practica
 
-| Paso | Tema | Notebook o material |
-|---:|---|---|
-| 1 | Estacionariedad debil y fuerte | PDF Clase 7 |
-| 2 | I(0), I(1) y diferencias | PDF Clase 7 |
-| 3 | ADF y raiz unitaria | PDF y notebook ADF/DFGLS |
-| 4 | Componentes deterministicas y rezagos | PDF y notebook ADF/DFGLS |
-| 5 | Ejemplo con log-precio del trigo | Notebook ADF/DFGLS |
-| 6 | Regresion auxiliar del ADF | Notebook ADF/DFGLS |
-| 7 | DFGLS | PDF y notebook ADF/DFGLS |
-| 8 | Operador de rezagos | PDF Clase 7 |
-| 9 | Condiciones de estacionariedad en AR, MA y ARMA | PDF Clase 7 |
-| 10 | Media y varianza de AR/ARMA | PDF Clase 7 |
-| 11 | Impulso-respuesta | PDF Clase 7 |
-| 12 | Cointegracion inicial | PDF Clase 7 |
-
----
-
-## 1. Estacionariedad debil
-
-### Microresumen teorico
-
-Un proceso `y_t` es debilmente estacionario si cumple:
-
-```text
-E(y_t) = mu < infinito para todo t
-Var(y_t) = sigma^2 < infinito para todo t
-Cov(y_t, y_{t-j}) = gamma_j para todo t y j
-```
-
-Esto significa:
-
-- la media no cambia con el tiempo;
-- la varianza no cambia con el tiempo;
-- la autocovarianza depende solo de la distancia entre observaciones, no de la
-  fecha exacta.
-
-Cuando un proceso es estacionario, decimos que es integrado de orden cero:
-
-```text
-y_t ~ I(0)
-```
-
-### Que significa
-
-Una serie estacionaria puede subir y bajar, pero lo hace alrededor de una
-estructura estable. No tiene una media que se mueva permanentemente, ni una
-varianza que crezca sin limite.
-
-Esto es clave porque muchos modelos de series temporales, como ARMA, se piensan
-para procesos estacionarios.
-
-### Idea para recordar
-
-Estacionario no significa quieto. Significa que sus propiedades probabilisticas
-basicas no dependen del calendario.
+| # | Tema | PDF | Notebook | Practica |
+|---:|---|---|---|---|
+| 1 | Estacionariedad debil y fuerte | p. 2-3 | - | - |
+| 2 | I(0), I(1) y diferencias | p. 4-5 | celdas 52-62 | Ej. 2, 3, 4 |
+| 3 | Test de Dickey-Fuller | p. 6-7 | celda 25 | Ej. 2 |
+| 4 | El "aumentado": rezagos, constante, tendencia | p. 8-10 | celdas 18-32 | Ej. 2 |
+| 5 | Phillips-Perron | p. 11 | - | - |
+| 6 | Tendencia deterministica vs raiz unitaria | p. 11-14 | celdas 55, 60 | - |
+| 7 | Cuantos rezagos: Ng-Perron y Schwert | p. 15-16 | celdas 29-35 | - |
+| 8 | DFGLS | p. 16-17 | celdas 44-51, 63-69 | - |
+| 9 | Operador de rezagos | p. 18-20 | - | - |
+| 10 | Estacionariedad de AR, MA y ARMA | p. 21-29 | - | - |
+| 11 | Media y varianza de AR(1) y ARMA | p. 29-33 | - | - |
+| 12 | Invertibilidad y AR($\infty$) | p. 34-37 | - | - |
+| 13 | Impulso-respuesta, mean lag, median lag | p. 37-43 | - | - |
+| 14 | Cointegracion | p. 44-46 | - | Ej. 7 |
 
 ---
 
-## 2. Estacionariedad fuerte
+# Parte A - Estacionariedad
 
-### Microresumen teorico
+## 1. Definicion
 
-Un proceso es estrictamente o fuertemente estacionario si la distribucion conjunta
-de:
+### Teoria
 
-```text
-{y_t, y_{t+j1}, y_{t+j2}, ..., y_{t+jn}}
-```
+Un proceso $y_t$ es **debilmente estacionario** si:
 
-depende solo de las distancias temporales:
+$$E(y_t) = \mu < \infty \quad \forall t$$
+$$Var(y_t) = \sigma^2 < \infty \quad \forall t$$
+$$Cov(y_t, y_{t-j}) = \gamma_j \quad \forall t,\; j = \pm1, \pm2, \dots$$
 
-```text
-j1, j2, ..., jn
-```
+Media y varianza **constantes**, y autocovarianzas que dependen **solo del rezago
+$j$**, no del momento $t$.
 
-y no del momento `t`.
+Cuando un proceso es estacionario decimos que es **integrado de orden cero**,
+$I(0)$.
 
-Si un proceso es estrictamente estacionario y tiene segundos momentos finitos,
-entonces tambien es debilmente estacionario.
+**Fuertemente estacionario** (o estrictamente): la **distribucion conjunta** de
+$\{y_t, y_{t+j_1},\dots,y_{t+j_n}\}$ depende solo de los intervalos
+$(j_1,\dots,j_n)$ y no de $t$.
 
-### Que significa
+Si un proceso es estrictamente estacionario **y tiene segundos momentos finitos**,
+entonces tambien es debilmente estacionario. La reciproca no vale en general.
 
-La estacionariedad fuerte exige estabilidad de toda la distribucion conjunta, no
-solo de media, varianza y autocovarianzas. Es mas exigente.
+### Para que sirve
 
-En el curso normalmente trabajamos con estacionariedad debil porque alcanza para
-ACF, ARMA y muchos resultados practicos.
+Toda la inferencia en series de tiempo depende de esto. Si la serie no es
+estacionaria, la media y la varianza muestrales **no estiman nada**: no hay un
+$\mu$ ni un $\sigma^2$ poblacionales a los que converjan.
 
-### Idea para recordar
+### Advertencia de vocabulario
 
-La estacionariedad fuerte implica la debil si hay varianza finita. La debil no
-necesariamente implica la fuerte.
-
----
-
-## 3. I(0), I(1) y diferencias
-
-### Microresumen teorico
-
-Si `y_t` es estacionaria:
-
-```text
-y_t ~ I(0)
-```
-
-Si `y_t` no es estacionaria, pero su primera diferencia si lo es:
-
-```text
-Delta y_t = y_t - y_{t-1}
-Delta y_t ~ I(0)
-```
-
-entonces:
-
-```text
-y_t ~ I(1)
-```
-
-Si la primera diferencia tampoco es estacionaria, podria ser necesario tomar una
-segunda diferencia:
-
-```text
-Delta(Delta y_t)
-```
-
-En la practica, muchas series economicas y financieras suelen ser `I(0)` o
-`I(1)`.
-
-### Que significa
-
-Diferenciar cambia la pregunta:
-
-- En niveles miramos el valor de la serie.
-- En diferencias miramos el cambio.
-- En logaritmos, la diferencia del log se interpreta aproximadamente como tasa
-  de crecimiento o retorno logaritmico.
-
-Por ejemplo:
-
-```text
-Delta ln(P_t) = ln(P_t) - ln(P_{t-1})
-```
-
-es el retorno logaritmico.
-
-### Idea para recordar
-
-Si el log-precio es `I(1)`, el retorno logaritmico puede ser `I(0)`.
+**Estacionariedad no tiene nada que ver con estacionalidad.** Estacionalidad es
+un patron que se repite cada 12 meses o cada 4 trimestres. Suenan parecido y no
+estan relacionados.
 
 ---
 
-## 4. Por que importa el orden de integracion
+## 2. Orden de integracion
 
-### Microresumen teorico
+### Teoria
 
-Antes de relacionar variables de series de tiempo, hay que revisar su orden de
-integracion.
+Si $y_t$ **no** es estacionario, se toman diferencias:
 
-La clase insiste en esto porque queremos relacionar variables con ordenes de
-integracion compatibles.
+$$\Delta y_t = y_t - y_{t-1}$$
 
-### Que significa
+- Si $\Delta y_t$ es estacionario, entonces $y_t$ es **$I(1)$**.
+- Si $\Delta y_t$ tampoco lo es, se vuelve a diferenciar: si $\Delta(\Delta y_t)$
+  es estacionario, $y_t$ es $I(2)$.
 
-Si se mezclan series no estacionarias sin cuidado, se puede obtener una regresion
-aparentemente buena pero falsa:
+**Un proceso $I(1)$ es no estacionario.** En la practica casi todas las series
+economicas y financieras son $I(0)$ o $I(1)$.
 
-```text
-R^2 alto
-t significativos
-relacion economica inexistente
-```
+### El ejemplo canonico
 
-Eso es una regresion espuria.
+$$\log(P_t) \sim I(1) \qquad\Longrightarrow\qquad \Delta\log(P_t) = r_t \sim I(0)$$
 
-Si dos variables son `I(1)`, se puede pensar en una relacion en niveles solo si
-estan cointegradas. Si no lo estan, normalmente se trabaja con diferencias.
+El log-precio de un activo es $I(1)$; el **retorno logaritmico** (su primera
+diferencia) es $I(0)$. Por eso toda la materia trabaja con retornos y no con
+precios.
 
-### Idea para recordar
+### Por que importa el orden de integracion
 
-En series temporales, antes de estimar hay que preguntar: `I(0)` o `I(1)`?
+**Lo primero que hay que revisar al trabajar con series de tiempo.** La razon:
+solo se pueden relacionar variables **del mismo orden de integracion**.
 
----
-
-## 5. Test Dickey-Fuller y ADF
-
-### Microresumen teorico
-
-Partimos de un AR(1):
-
-```text
-y_t = rho y_{t-1} + epsilon_t
-```
-
-Queremos testear:
-
-```text
-H0: rho = 1       raiz unitaria, no estacionaria
-HA: rho < 1       estacionaria
-```
-
-Restando `y_{t-1}`:
-
-```text
-y_t - y_{t-1} = rho y_{t-1} - y_{t-1} + epsilon_t
-Delta y_t = (rho - 1)y_{t-1} + epsilon_t
-```
-
-Definimos:
-
-```text
-gamma = rho - 1
-```
-
-Entonces:
-
-```text
-Delta y_t = gamma y_{t-1} + epsilon_t
-H0: gamma = 0
-HA: gamma < 0
-```
-
-### ADF
-
-El Dickey-Fuller aumentado agrega rezagos de la variable dependiente para remover
-autocorrelacion residual:
-
-```text
-Delta y_t = c + gamma y_{t-1} + d t
-            + beta_1 Delta y_{t-1}
-            + beta_2 Delta y_{t-2}
-            + ...
-            + beta_p Delta y_{t-p}
-            + epsilon_t
-```
-
-La hipotesis sigue siendo:
-
-```text
-H0: gamma = 0       raiz unitaria
-HA: gamma < 0       estacionaria
-```
-
-### Que significa
-
-Los rezagos de `Delta y_t` no se agregan porque sean el foco teorico principal,
-sino para limpiar autocorrelacion en los residuos del test.
-
-Si queda autocorrelacion residual, los valores criticos del ADF no serian
-confiables.
-
-### Idea para recordar
-
-ADF no testea si la serie "se ve con tendencia". Testea si hay raiz unitaria.
+Regresar una serie $I(1)$ contra otra $I(1)$ que no esta cointegrada produce
+**regresion espuria**: $R^2$ altisimo, estadisticos $t$ enormes, y todo
+completamente sin sentido. Es lo que se evita con los pasos previos de ADF.
 
 ---
 
-## 6. Valores criticos especiales
+# Parte B - El test de Dickey-Fuller aumentado
 
-### Microresumen teorico
+## 3. De donde sale el test
 
-El estadistico ADF se parece a un estadistico `t` porque sale del coeficiente de
-`y_{t-1}` en la regresion auxiliar. Pero bajo la hipotesis nula de raiz unitaria
-no sigue una distribucion t convencional.
+### Teoria
 
-Por eso se usan valores criticos Dickey-Fuller.
+Sea $y_t$ un AR(1). Se quiere testear si $\rho = 1$ (random walk) contra
+$\rho < 1$ (AR(1) estacionario):
 
-### Como leerlo
+$$y_t = \rho y_{t-1} + \varepsilon_t; \qquad H_0: \rho = 1, \qquad H_A: \rho < 1$$
 
-El test es unilateral hacia la izquierda:
+Restando $y_{t-1}$ de ambos lados:
 
-```text
-valores criticos negativos
-estadistico muy negativo -> evidencia contra raiz unitaria
-```
+$$\Delta y_t = (\rho - 1)y_{t-1} + \varepsilon_t \tag{$*$}$$
 
-Regla:
+$$\boxed{\;H_0: \rho - 1 = 0 \qquad H_A: \rho - 1 < 0\;}$$
 
-- Si el estadistico ADF es mas negativo que el valor critico, rechazamos `H0`.
-- Si el p-value es menor que el nivel de significancia, rechazamos `H0`.
-- Si rechazamos `H0`, hay evidencia de estacionariedad.
-- Si no rechazamos `H0`, no probamos raiz unitaria; simplemente no encontramos
-  evidencia suficiente contra ella.
+Llamando $\gamma = \rho - 1$, el test es simplemente si el coeficiente de
+$y_{t-1}$ en esa regresion es cero.
 
-### Error frecuente
+### Para que sirve la reescritura
 
-No hay que comparar el estadistico ADF con la tabla t usual.
-
-### Idea para recordar
-
-ADF usa una regresion auxiliar, pero su estadistico tiene tabla propia.
+Convierte una hipotesis rara ("$\rho$ vale exactamente 1") en una familiar ("este
+coeficiente es cero"), que se lee directamente de una regresion MCO.
 
 ---
 
-## 7. Componentes deterministicas
+## 4. Por que los valores criticos no son los de la $t$
 
-### Microresumen teorico
+### Teoria
 
-El ADF puede incluir distintos componentes deterministas:
+**Bajo $H_0$ la serie es no estacionaria.** Toda la teoria asintotica de la Clase
+3 supone estacionariedad, asi que **el estadistico no tiene distribucion $t$**.
+
+Dickey y Fuller mostraron que los valores criticos correctos son **mayores en
+valor absoluto** que los de la $t$ convencional, y que el ajuste depende del
+tamanio de la muestra.
+
+**Como el test es a una cola izquierda, los valores criticos son siempre
+negativos.**
+
+### Como leer la salida
+
+Los software reportan directamente los valores criticos correctos y el p-value:
 
 ```text
-sin constante
-con constante
-con constante y tendencia lineal
-con constante, tendencia lineal y tendencia cuadratica
+Estadistico ADF : -1.8591
+p-valor         :  0.3515
+Valores criticos:
+   1%: -3.4437
+   5%: -2.8674
+  10%: -2.5700
 ```
 
-En `statsmodels`:
+**Se rechaza $H_0$ si el estadistico es MENOR (mas negativo) que el valor
+critico.** Aca $-1.8591 > -2.8674$, asi que **no** se rechaza: hay raiz unitaria.
 
-```python
-regression="n"    # sin constante ni tendencia
-regression="c"    # constante
-regression="ct"   # constante y tendencia lineal
-regression="ctt"  # constante, tendencia lineal y cuadratica
-```
-
-### Que significa
-
-La especificacion debe parecerse al comportamiento de la serie:
-
-- Si fluctua alrededor de cero, podria usarse sin constante.
-- Si fluctua alrededor de una media distinta de cero, conviene constante.
-- Si muestra tendencia deterministica, conviene constante y tendencia.
-
-Pero cuidado: una serie con raiz unitaria y una serie con tendencia
-deterministica pueden verse muy parecidas.
-
-### Idea para recordar
-
-La eleccion de constante/tendencia no es decorativa: cambia la regresion auxiliar
-y los valores criticos.
+**El error mas comun** es comparar contra $\pm1.96$. Con esos criticos se
+rechazaria raiz unitaria casi siempre.
 
 ---
 
-## 8. Tendencia deterministica vs raiz unitaria
+## 5. Por que "aumentado"
 
-### Microresumen teorico
+### Teoria
 
-Una serie con tendencia deterministica puede escribirse como:
+El problema del Dickey-Fuller simple $(*)$: si hay **autocorrelacion en los
+residuos** de esa regresion, los valores criticos ya no estan bien calculados.
 
-```text
-y_t = beta t + epsilon_t
-```
+La solucion de Dickey y Fuller: agregar **rezagos de la variable dependiente**
+para remover esa autocorrelacion, y ademas permitir constante y tendencia
+deterministica:
 
-Entonces:
+$$\Delta y_t = c + \gamma\, y_{t-1} + d\,t + \sum_{i=1}^{p}\phi_i \Delta y_{t-i} + \varepsilon_t \tag{$**$}$$
 
-```text
-E(y_t) = beta t
-```
+Las hipotesis **no cambian**:
 
-La media depende del tiempo, por lo que la serie no es estacionaria.
+$$H_0: \gamma = 0 \qquad\qquad H_A: \gamma < 0$$
 
-Pero no es lo mismo que una serie `I(1)`.
+Los terminos $\Delta y_{t-1}, \Delta y_{t-2}, \dots$ estan solo para limpiar la
+autocorrelacion: **no se interpretan**.
 
-### Como estacionarizar cada una
+### Phillips-Perron
 
-Si la serie es `I(1)`:
-
-```text
-tomar primeras diferencias
-```
-
-Si la serie es `I(0)` alrededor de una tendencia deterministica:
-
-```text
-estimar la tendencia y quedarse con los residuos
-```
-
-Es decir, correr:
-
-```text
-y_t = alpha + beta t + residuo_t
-```
-
-y analizar los residuos.
-
-### Que significa
-
-En el primer caso, los shocks tienen efectos persistentes. En el segundo, los
-shocks son transitorios alrededor de una tendencia deterministica.
-
-### Idea para recordar
-
-Raiz unitaria y tendencia deterministica pueden parecerse en un grafico, pero se
-corrigen de manera distinta.
+El ADF supone que los errores de $(**)$ son i.i.d. El test de **Phillips-Perron**
+relaja ese supuesto usando una correccion no parametrica en vez de rezagos.
 
 ---
 
-## 9. Seleccion de rezagos en ADF
+## 6. Constante y tendencia: la eleccion mas delicada
 
-### Microresumen teorico
+### Teoria
 
-La cantidad de rezagos `p` en el ADF importa.
+El punto crucial del PDF: **graficamente es casi imposible distinguir una serie
+con tendencia deterministica de una con raiz unitaria**. Pero son cosas distintas
+y **se estacionarizan de forma completamente diferente**.
 
-Si usamos pocos rezagos:
+| | Modelo | Es estacionaria? | Como se estacionariza |
+|---|---|---|---|
+| **Tendencia deterministica** | $Y_t = \beta t + \varepsilon_t$ | **No**: $E(Y_t) = \beta t$ depende de $t$ | **regresar contra $t$ y quedarse con los residuos** |
+| **Raiz unitaria** | $Y_t = Y_{t-1} + \varepsilon_t$ | **No** | **tomar primeras diferencias** |
 
-```text
-puede quedar autocorrelacion residual
-```
+Notar que en el primer caso $Var(Y_t) = \sigma_\varepsilon^2$ es constante: lo que
+falla es solo la media.
 
-Si usamos demasiados:
+Una serie $I(0)$ **mas** una tendencia deterministica se llama a veces
+"trend-stationary". Se estacionariza quitandole la tendencia, **no**
+diferenciando.
 
-```text
-perdemos poder estadistico
-```
+### Por que importa
 
-Ng y Perron sugieren:
+Aplicar el metodo equivocado deja la serie mal especificada:
 
-1. Elegir una cota superior `pmax`.
-2. Estimar ADF con `pmax`.
-3. Mirar el estadistico t del ultimo rezago de `Delta y_t`.
-4. Si `|t| >= 1.6`, quedarse con `pmax`.
-5. Si no, reducir un rezago y repetir.
+- diferenciar una serie trend-stationary introduce una estructura MA artificial
+  (sobrediferenciacion);
+- quitarle tendencia a una serie $I(1)$ no la estacionariza.
 
-Schwert propone:
+### Las cuatro opciones en `statsmodels`
 
-```text
-pmax = floor(12 * (T/100)^(1/4))
-```
+| `regression=` | Que incluye |
+|---|---|
+| `"n"` | ni constante ni tendencia |
+| `"c"` | solo constante (el default) |
+| `"ct"` | constante y tendencia lineal |
+| `"ctt"` | constante, tendencia lineal y cuadratica |
 
-En `statsmodels`, si no se fija `maxlag`, usa una regla automatica para el maximo
-de rezagos. Tambien permite seleccionar con:
+### La estrategia practica
 
-```python
-autolag="AIC"
-autolag="BIC"
-autolag="t-stat"
-autolag=None
-```
+1. Empezar con `"ct"`.
+2. Mirar en la regresion auxiliar si el coeficiente de la tendencia es
+   **significativo**.
+3. Si **no** lo es, repetir con `"c"`, porque incluir terminos deterministicos
+   innecesarios **reduce el poder del test**.
 
-### Idea para recordar
-
-No elegimos rezagos para conseguir el p-value que nos gusta. Los elegimos para
-que el test este bien especificado.
-
----
-
-## 10. Ejemplo practico: precio del trigo
-
-### Objetivo
-
-El notebook pregunta:
-
-```text
-El precio del trigo es estacionario o necesitamos diferenciarlo?
-```
-
-La base usada es:
-
-```text
-Bases de Datos MIA103/wheat.xlsx
-```
-
-con precios mensuales desde 1980M01 hasta 2021M09.
-
-### En Python lo hacemos asi
-
-El notebook carga:
-
-```python
-df = pd.read_excel('wheat.xlsx')
-```
-
-Desde la raiz del repositorio conviene usar:
-
-```python
-df = pd.read_excel('Bases de Datos MIA103/wheat.xlsx')
-```
-
-Luego convierte la columna de fecha:
-
-```python
-inicio = pd.to_datetime(df["yearmm"].iloc[0], format="%YM%m")
-
-df["date"] = pd.period_range(
-    start=inicio,
-    periods=len(df),
-    freq="M"
-)
-
-df = df.set_index("date")
-```
-
-Convierte el precio a numerico:
-
-```python
-df["wheat_srw"] = pd.to_numeric(df["wheat_srw"], errors="coerce")
-```
-
-Calcula log-precio:
-
-```python
-df_log_ws = np.log(df["wheat_srw"])
-```
-
-y retorno logaritmico:
-
-```python
-df["dlws"] = df_log_ws.diff()
-```
-
-### Salida inicial
-
-La base empieza asi:
-
-```text
-yearmm    wheat_srw   wheat_hrw
-1980M01     169.71      175.63
-1980M02     170.49      172.70
-1980M03     162.40      163.51
-1980M04     155.80      156.53
-1980M05     156.20      161.30
-```
-
-Los primeros retornos logaritmicos son:
-
-```text
-1980-02     0.004586
-1980-03    -0.048614
-1980-04    -0.041489
-1980-05     0.002564
-```
-
-### Que significa
-
-El precio en niveles es un valor. El log-precio permite mirar variaciones
-proporcionales. La diferencia del log-precio es el retorno logaritmico mensual.
-
-La pregunta de integracion se responde en dos pasos:
-
-1. Testear el log-precio en niveles.
-2. Si no rechazamos raiz unitaria, testear la primera diferencia.
-
-### Idea para recordar
-
-Para precios financieros o de commodities suele ser natural que el nivel sea
-`I(1)` y el retorno sea `I(0)`, pero hay que testearlo.
+Eso es exactamente lo que hace el notebook con el trigo.
 
 ---
 
-## 11. ADF sobre retornos logaritmicos
+## 7. Cuantos rezagos usar
 
-### En Python
+### Teoria
+
+Es una decision con costos en las dos direcciones:
+
+```text
+p muy chico  ->  queda correlacion serial, los valores criticos no son validos
+p muy grande ->  se pierde poder estadistico del test
+```
+
+**Regla de Ng & Perron (1995)**:
+
+1. Elegir una cota superior $p_{max}$.
+2. Estimar el ADF con $p_{max}$ rezagos.
+3. Si el valor absoluto del estadistico $t$ del **ultimo rezago** de $\Delta y_t$
+   es $\ge 1.6$, quedarse con $p = p_{max}$. Si no, reducir en uno y repetir.
+
+**Regla de Schwert (1989)** para la cota superior:
+
+$$p_{max} = \left\lfloor 12\left(\frac{T}{100}\right)^{1/4}\right\rfloor$$
+
+Con $T = 500$: $p_{max} = \lfloor 12 \times 1.495 \rfloor = 17$.
+
+### En `statsmodels`
+
+`autolag` implementa esas ideas:
+
+| `autolag=` | Criterio |
+|---|---|
+| `"t-stat"` | la regla de Ng-Perron (el que usa el notebook) |
+| `"AIC"` | minimiza Akaike (default) |
+| `"BIC"` | minimiza Schwarz |
+| `None` | usa exactamente `maxlag` |
+
+Si no se especifica `maxlag`, `statsmodels` aplica la regla de Schwert.
+
+### Como leer la salida
+
+Sobre los retornos del trigo ($T=500$, $p_{max}=17$):
+
+```text
+maxlag  regression  autolag     ADF        p-value    lags
+   17       c       t-stat     -8.2930     0.0000       8
+   17      ct       t-stat     -8.3291     0.0000       8
+   17     ctt       t-stat     -8.3365     0.0000       8
+   17       n       t-stat     -8.2966     0.0000       8
+ None       c       t-stat     -8.2930     0.0000       8
+ None       c       AIC        -8.2930     0.0000       8
+ None       c       BIC       -18.7245     0.0000       0
+```
+
+Dos lecturas:
+
+- **La conclusion es robusta**: con cualquier especificacion se rechaza
+  contundentemente. Cuando el resultado es asi de claro, los detalles no importan.
+- **BIC elige 0 rezagos** y da un estadistico muy distinto ($-18.72$). BIC penaliza
+  mas los parametros. Que el estadistico cambie tanto muestra por que la eleccion
+  de rezagos no es un detalle: aca no cambia la conclusion, pero en un caso al
+  filo si podria.
+
+**El objetivo no es elegir el $p$ que da el p-value que mas conviene.**
+
+---
+
+## 8. Correr el ADF en Python
+
+### Codigo generico
 
 ```python
 from statsmodels.tsa.stattools import adfuller
 
-y = df["dlws"].dropna()
+test = adfuller(y, regression="ct", autolag="t-stat")
 
-test = adfuller(
-    y,
-    regression="c",
-    autolag="t-stat"
-)
+print(f"Estadistico ADF : {test[0]:.4f}")
+print(f"p-valor         : {test[1]:.4f}")
+print(f"Rezagos         : {test[2]}")
+print(f"Observaciones   : {test[3]}")
+for nivel, valor in test[4].items():
+    print(f"  {nivel}: {valor:.4f}")
 ```
 
-### Salida del notebook
+La tupla que devuelve `adfuller` es:
 
-```text
-Estadistico ADF : -8.2930
-p-valor         : 0.0000
-Rezagos         : 8
-Observaciones   : 491
-Valores criticos:
-  1%:  -3.4437
-  5%:  -2.8674
-  10%: -2.5699
-```
+| Indice | Contenido |
+|---|---|
+| `[0]` | estadistico ADF |
+| `[1]` | p-value |
+| `[2]` | rezagos usados |
+| `[3]` | observaciones efectivas |
+| `[4]` | diccionario de valores criticos |
+| `[5]` | criterio de informacion (o `RegressionResults` si `regresults=True`) |
 
-### Que significa
-
-El estadistico `-8.2930` es mucho mas negativo que los valores criticos. El
-p-value es practicamente cero. Por lo tanto, rechazamos:
-
-```text
-H0: hay raiz unitaria
-```
-
-Conclusion: los retornos logaritmicos del trigo son estacionarios segun este ADF.
-
-### Idea para recordar
-
-Cuando rechazamos la raiz unitaria en los retornos, tenemos evidencia de que
-`Delta log(P_t)` es `I(0)`.
-
----
-
-## 12. Regresion auxiliar del ADF
-
-### Microresumen teorico
-
-La regresion auxiliar con constante y tendencia es:
-
-```text
-Delta y_t = c + beta t + gamma y_{t-1}
-            + sum_{i=1}^{p} phi_i Delta y_{t-i}
-            + epsilon_t
-```
-
-El coeficiente importante para el test es:
-
-```text
-gamma
-```
-
-El estadistico ADF es el estadistico asociado a `gamma`.
-
-### En Python
-
-El notebook usa:
+### Ver la regresion auxiliar
 
 ```python
-test_adf = adfuller(
-    y,
-    regression="c",
-    autolag="t-stat",
-    regresults=True
-)
+test = adfuller(y, regression="ct", autolag="t-stat", regresults=True)
+print(test[3].resols.summary())
 ```
 
-Con `regresults=True`, `statsmodels` permite mirar la regresion auxiliar.
+**Con `regresults=True` la estructura de la tupla cambia**: `test[2]` pasa a ser
+el diccionario de criticos y `test[3]` el objeto de resultados. Es la trampa del
+notebook, que por eso define dos funciones de impresion distintas.
 
-Tambien la reconstruye manualmente:
+### Reproducir el ADF a mano
 
 ```python
+T = len(y)
+t = np.arange(1, T + 1)
 dy = y.diff()
 
-X = pd.DataFrame({
-    "const": 1.0,
-    "trend": t,
-    "y_lag1": y.shift(1),
-})
-
+X = pd.DataFrame({"const": 1.0, "trend": t, "y_lag1": y.shift(1)}, index=y.index)
 for i in range(1, k_lags + 1):
     X[f"dy_lag{i}"] = dy.shift(i)
 
-res = sm.OLS(Y_ols, X_ols).fit()
+data = pd.concat([dy, X], axis=1).dropna()
+res = sm.OLS(data.iloc[:, 0], data.iloc[:, 1:]).fit()
+
+print(res.params["y_lag1"])    # gamma
+print(res.tvalues["y_lag1"])   # ESTE es el estadistico ADF
 ```
 
-### Salida clave con constante y tendencia
+### Como leer la salida
 
-```text
-Coeficiente de y_{t-1}: -1.0765914429181938
-Estadistico asociado:   -8.329124154425488
-```
+El **estadistico ADF es el $t$ del coeficiente de $y_{t-1}$** en esa regresion.
+El numero coincide con el que reporta `adfuller`, pero **no se compara contra la
+tabla $t$**: se compara contra los criticos de Dickey-Fuller.
 
-### Que significa
-
-Ese estadistico coincide con el ADF para la especificacion correspondiente.
-Pero no debe interpretarse con tabla t convencional.
-
-### Idea para recordar
-
-El ADF sale de una regresion OLS, pero su distribucion bajo H0 no es la t usual.
+Los coeficientes de `dy_lag1`, `dy_lag2`, ... no se interpretan: estan solo para
+blanquear los residuos.
 
 ---
 
-## 13. Comparacion de configuraciones ADF
+## 9. DFGLS
 
-### Salida del notebook
+### Teoria
 
-El notebook compara varias configuraciones para los retornos logaritmicos:
+El **DFGLS** (Elliott, Rothenberg y Stock, 1996) es una variante del
+Dickey-Fuller que usa una transformacion **GLS** para remover los componentes
+deterministicos **antes** de hacer el contraste.
 
-```text
-maxlag  regression  autolag   ADF        p_value       lags
-17      c           t-stat   -8.2930    4.21e-13       8
-17      ct          t-stat   -8.3291    1.24e-11       8
-17      ctt         t-stat   -8.3365    5.04e-11       8
-17      n           t-stat   -8.2966    6.90e-14       8
-None    c           AIC      -8.2930    4.21e-13       8
-None    c           BIC     -18.7245    2.03e-30       0
-```
+Tiene **mas poder estadistico** que el ADF, sobre todo cuando $\rho$ esta cerca de
+1 pero no es 1. Es justamente el caso dificil.
 
-### Que significa
+El PDF senala ademas que **la cantidad optima de rezagos puede ser distinta segun
+haya o no tendencia deterministica**.
 
-Todas las configuraciones rechazan raiz unitaria para los retornos. La conclusion
-es robusta: `Delta log(P_t)` parece estacionaria.
-
-Pero cambian los rezagos y los valores exactos. Esto muestra que la especificacion
-importa.
-
-### Idea para recordar
-
-Cuando varias especificaciones razonables llevan a la misma conclusion, la
-evidencia es mas convincente.
-
----
-
-## 14. Procedimiento completo para determinar orden de integracion
-
-### Paso 1: ADF en niveles
-
-El notebook aplica ADF al log-precio:
+### Codigo generico
 
 ```python
-x = df_log_ws.dropna()
+# requiere: pip install arch
+from arch.unitroot import DFGLS
 
-test_adf = adfuller(
-    x,
-    regression="ct",
-    autolag="t-stat",
-    regresults=True
-)
+dfgls = DFGLS(y, trend="ct", method="t-stat")
+print(dfgls.summary())
+
+print(dfgls.regression.summary())   # la regresion de atras
 ```
 
-Salida clave:
+`trend` acepta `"c"` y `"ct"` (no tiene `"n"` ni `"ctt"`).
+
+### Para que se usa en la practica
+
+Como **analisis de robustez**: si ADF y DFGLS coinciden, la conclusion es solida.
+Si difieren, hay que mirar con mas cuidado, y en general se le da mas peso al
+DFGLS por su mayor poder.
+
+---
+
+# Parte C - Operador de rezagos y condiciones de estacionariedad
+
+## 10. El operador de rezagos
+
+### Teoria
+
+$$L x_t = x_{t-1} \qquad L^2 x_t = x_{t-2} \qquad L^k x_t = x_{t-k}$$
+
+Con eso, la primera diferencia es:
+
+$$\Delta y_t = y_t - y_{t-1} = (1-L)y_t$$
+
+y un AR($p$) se escribe:
+
+$$y_t\left(1 - \rho_1 L - \rho_2 L^2 - \cdots - \rho_p L^p\right) = \varepsilon_t \qquad\Longleftrightarrow\qquad y_t A(L) = \varepsilon_t$$
+
+con $A(L) = 1 - \rho_1 L - \cdots - \rho_p L^p$ y
+$A(1) = 1 - \rho_1 - \cdots - \rho_p$.
+
+### Para que sirve
+
+Convierte manipulaciones de rezagos en **algebra de polinomios**. Todo lo que
+sigue (condiciones de estacionariedad, invertibilidad, impulso-respuesta) sale de
+tratar $A(L)$ y $B(L)$ como polinomios comunes.
+
+---
+
+## 11. Condicion de estacionariedad de un AR
+
+### Teoria
+
+Un AR($p$) es debilmente estacionario si **todas las raices de**
+
+$$1 - \rho_1 z - \rho_2 z^2 - \cdots - \rho_p z^p = 0$$
+
+**estan fuera del circulo unitario**, es decir, tienen modulo mayor a 1.
+
+Si todas las raices son reales, la condicion es que sean todas mayores a 1 en
+valor absoluto.
+
+Para un AR(1): $1 - \rho z = 0$ tiene raiz $z = 1/\rho$, que esta fuera del
+circulo unitario si y solo si $|\rho| < 1$. **Es la condicion de siempre, escrita
+de otra forma.**
+
+### Ejemplo del PDF: AR(2) con raices complejas
+
+$$y_t = 0.75 y_{t-1} - 0.25 y_{t-2} + \varepsilon_t \qquad\Longrightarrow\qquad y_t\left(1 - 0.75L + 0.25L^2\right) = \varepsilon_t$$
+
+Resolviendo $0.25z^2 - 0.75z + 1 = 0$ con $a=\tfrac14$, $b=-\tfrac34$, $c=1$:
+
+$$z = \frac{\tfrac34 \pm \sqrt{\tfrac{9}{16} - 1}}{\tfrac12} = \frac{3}{2} \pm \frac{i\sqrt7}{4}\cdot 2 \;=\; 1.5 \pm 1.3229\,i$$
+
+El modulo (la distancia al origen) es:
+
+$$\sqrt{\left(\tfrac32\right)^2 + \left(\tfrac{\sqrt7}{2}\right)^2} = \sqrt{\tfrac94 + \tfrac74} = \sqrt{4} = 2$$
+
+Como $2 > 1$, **el proceso es estacionario**.
+
+### Codigo generico
+
+```python
+# 1 - 0.75 z + 0.25 z^2 = 0
+# np.roots recibe los coeficientes de mayor a menor grado
+raices = np.roots([0.25, -0.75, 1])
+
+print(raices)          # [1.5+1.3229j  1.5-1.3229j]
+print(np.abs(raices))  # [2. 2.]  -> estacionario
+```
+
+Con `ArmaProcess` es aun mas directo:
+
+```python
+proc = ArmaProcess(np.array([1, -0.75, 0.25]), np.array([1]))
+proc.isstationary     # True
+proc.arroots          # las raices
+```
+
+### Como leer la salida
+
+**Raices complejas no son un problema**: significan que el proceso tiene
+oscilaciones ciclicas. Lo que importa es el **modulo**, no si son reales o
+complejas. Por eso la condicion se enuncia como "fuera del circulo unitario" y no
+como "mayores a 1".
+
+---
+
+## 12. Estacionariedad en MA y ARMA
+
+### MA
+
+$$y_t = \theta_1\varepsilon_{t-1} + \cdots + \theta_q\varepsilon_{t-q} + \varepsilon_t$$
+
+**Un MA($q$) es siempre estacionario mientras los $\theta_i$ sean finitos.** No
+hay condicion que verificar.
+
+La razon: es una suma **finita** de ruidos blancos, asi que su media y su varianza
+son constantes por construccion.
+
+### ARMA
+
+$$y_t A(L) = B(L)\varepsilon_t, \qquad A(L) = 1-\rho_1L-\cdots-\rho_pL^p, \qquad B(L) = 1+\theta_1L+\cdots+\theta_qL^q$$
+
+Un ARMA($p,q$) es debilmente estacionario **si y solo si** los $\theta_i$ son
+finitos **y** todas las raices de $A(z) = 0$ estan fuera del circulo unitario.
+
+**La estacionariedad la decide solo la parte AR.**
+
+### Tabla resumen
+
+| Parte | Polinomio | Condicion | Propiedad |
+|---|---|---|---|
+| AR | $A(z)=0$ | raices fuera del circulo unitario | **estacionariedad** |
+| MA | $B(z)=0$ | raices fuera del circulo unitario | **invertibilidad** |
+
+Es la tabla que reaparece en el notebook complementario de la
+[Clase 8](Clase_08.md).
+
+---
+
+## 13. Media y varianza
+
+### AR(1) con constante
+
+$$y_t = c + \rho y_{t-1} + \varepsilon_t$$
+
+Suponiendo estacionariedad, $E(y_t) = E(y_{t-1}) = \mu$:
+
+$$\mu = c + \rho\mu \;\Longrightarrow\; \mu(1-\rho) = c \;\Longrightarrow\; \boxed{\;\mu = \frac{c}{1-\rho}\;}$$
+
+Y la varianza es **la misma que sin constante**, porque la constante no afecta las
+desviaciones respecto de la media:
+
+$$\gamma_0 = \frac{\sigma_\varepsilon^2}{1-\rho^2}$$
+
+Lo mismo vale para todas las autocovarianzas.
+
+### Caso general ARMA($p,q$)
+
+$$E(y_t) = c\left(1 - \sum_{j=1}^{p}\rho_j\right)^{-1}$$
+
+$$\gamma_0 = Var(y_t) = \sigma_\varepsilon^2\left(1-\sum_{j=1}^{p}\rho_j^2\right)^{-1}\left(1+\sum_{i=1}^{q}\theta_i^2\right)$$
+
+Notar que $\left(1-\sum\rho_j\right)^{-1} = A(1)^{-1}$: la media depende de $A(1)$.
+Cuando $A(1) \to 0$ (raiz unitaria), la media **no existe**.
+
+### Por que importa: reversion a la media
+
+**Los procesos estacionarios siempre vuelven a su media.** El PDF marca la
+consecuencia financiera: si nos alejamos de la media, en algun momento habria que
+volver, y eso puede traducirse en una **estrategia de inversion**.
+
+Es el fundamento del pairs trading y de las estrategias de reversion a la media.
+
+---
+
+# Parte D - Invertibilidad e impulso-respuesta
+
+## 14. Invertibilidad y representacion AR($\infty$)
+
+### Teoria
+
+Para un ARMA estacionario, $A(L)$ tiene inversa y se puede escribir:
+
+$$y_t = c^* + G(L)\varepsilon_t, \qquad c^* = cA(L)^{-1}, \quad G(L) = B(L)A(L)^{-1}$$
+
+que es una representacion **MA($\infty$)**.
+
+Si ademas la parte MA es **invertible**, es decir si las raices de
+
+$$1 + \theta_1 z + \theta_2 z^2 + \cdots + \theta_q z^q = 0$$
+
+estan fuera del circulo unitario, entonces $B(L)^{-1}$ existe y:
+
+$$y_t A(L)B(L)^{-1} = \tilde{c} + \varepsilon_t$$
+
+que es una representacion **AR($\infty$)**.
+
+### Que significa
+
+Un mismo proceso puede escribirse de tres formas: ARMA($p,q$) finito, MA($\infty$)
+o AR($\infty$). **La invertibilidad es lo que permite la tercera.**
+
+Su importancia practica: solo si el proceso es invertible se pueden recuperar los
+$\varepsilon_t$ (no observables) a partir del pasado observado de $y$. Sin eso, no
+se pueden hacer pronosticos.
+
+---
+
+## 15. Funcion impulso-respuesta
+
+### Teoria
+
+Se introduce un shock unitario $u_t$ en el periodo $t$:
+
+$$u_t = \begin{cases}1 & \text{en el periodo } t\\ 0 & \text{si no}\end{cases}$$
+
+Partiendo de $y_t F(L) = \tilde{c} + \varepsilon_t + u_t$ con
+$F(L) = A(L)B(L)^{-1}$, y notando que
+$F(L)^{-1} = A(L)^{-1}B(L) = G(L) = 1 + g_1L + g_2L^2 + \cdots$:
+
+$$y_t = c^* + G(L)(\varepsilon_t + u_t)$$
+
+Los coeficientes $g_1, g_2, g_3,\dots$ son el **efecto del shock sobre
+$y_{t+1}, y_{t+2}, y_{t+3},\dots$** Esa es la **funcion impulso-respuesta**.
+
+### Tres medidas resumen
+
+| Medida | Formula | Que mide |
+|---|---|---|
+| **Efecto de largo plazo** | $G(1) = 1 + g_1 + g_2 + \cdots = \dfrac{B(1)}{A(1)}$ | efecto acumulado total |
+| **Mean lag** | $\dfrac{\sum i\,g_i}{\sum g_i} = G(1)^{-1}G'(1)$ | rezago promedio del efecto |
+| **Median lag** | el $s$ tal que se acumulo la mitad de $G(1)$ | velocidad de transmision |
+
+### Como calcular los $g_i$
+
+Igualando coeficientes en $A(L)G(L) = B(L)$:
+
+$$g_k = b_k - \sum_{j=1}^{p} a_j\, g_{k-j}$$
+
+### Ejemplo completo del PDF (Carol Alexander II.5.2)
+
+$$y_t = 0.03 + 0.75y_{t-1} - 0.25y_{t-2} + \varepsilon_t + 0.5\varepsilon_{t-1}$$
+
+$$A(L) = 1 - 0.75L + 0.25L^2, \qquad B(L) = 1 + 0.5L$$
+
+Igualando coeficientes en $(1 - 0.75L + 0.25L^2)(1 + g_1L + g_2L^2 + \cdots) = 1 + 0.5L$:
+
+$$L^1:\quad g_1 - 0.75 = 0.5 \;\Longrightarrow\; g_1 = 1.25$$
+$$L^2:\quad g_2 - 0.75g_1 + 0.25 = 0 \;\Longrightarrow\; g_2 = \tfrac{11}{16} = 0.6875$$
+$$L^3:\quad g_3 - 0.75g_2 + 0.25g_1 = 0 \;\Longrightarrow\; g_3 = \tfrac{13}{64} = 0.203125$$
+$$L^4:\quad g_4 - 0.75g_3 + 0.25g_2 = 0 \;\Longrightarrow\; g_4 = -\tfrac{5}{256} = -0.019531$$
+
+### Codigo generico
+
+```python
+A = [1, -0.75, 0.25]     # coeficientes de A(L), con el 1 del lag 0
+B = [1, 0.5]             # coeficientes de B(L)
+p = len(A) - 1
+
+g = [1.0]
+for k in range(1, 40):
+    b = B[k] if k < len(B) else 0.0
+    g.append(b - sum(A[j]*g[k-j] for j in range(1, min(k, p)+1)))
+
+g = np.array(g)
+
+print("efecto largo plazo:", g.sum())                          # 3.0
+print("mean lag:", (np.arange(len(g))*g).sum() / g.sum())      # 0.8333
+print("acumulada:", np.cumsum(g)/g.sum())
+```
+
+### Salida verificada
 
 ```text
-Estadistico ADF: -3.1031
-p-valor:          0.1055
-Valores criticos:
-  1%:  -3.9773
-  5%:  -3.4195
-  10%: -3.1323
+g:  1.0000  1.2500  0.6875  0.2031  -0.0195  -0.0654  -0.0442  -0.0168 ...
+
+efecto de largo plazo  G(1) = B(1)/A(1) = 1.5/0.5 = 3.0
+mean lag                             = 0.8333
+IRF acumulada / G(1):  0.3333  0.7500  0.9792  1.0469  1.0404  1.0186 ...
+median lag (interpolando entre s=0 y s=1) = 0.4
 ```
 
-### Interpretacion
+### Como leer la salida
 
-Con un nivel de significancia de 10%, el p-value `0.1055` es apenas mayor que
-`0.10`, por lo que no rechazamos la nula de raiz unitaria.
+- **$g_1 = 1.25 > 1$**: el efecto en $t+1$ es **mayor** que el impacto inicial.
+  Es tipico de un ARMA con parte MA positiva: el shock se amplifica antes de
+  disiparse.
+- **$g_4 < 0$**: la IRF **cambia de signo**. Son las oscilaciones que generan las
+  raices complejas del AR(2) (las mismas del punto 11, con modulo 2).
+- **Efecto de largo plazo 3**: un shock unitario eleva el nivel acumulado de $y$
+  en 3 unidades.
+- **La acumulada supera 1.0 y despues baja**: sobrepasa el valor de largo plazo y
+  converge oscilando (overshooting). Los efectos son visibles unos 10 periodos.
+- **Median lag $= 0.4$**: la mitad del efecto total ya se transmitio antes del
+  primer periodo. La transmision es muy rapida.
 
-Ademas, en la regresion auxiliar la tendencia deterministica aparece
-significativa:
+---
+
+# Parte E - Cointegracion
+
+## 16. Idea inicial
+
+### Teoria
+
+Si $y_t$ y $x_t$ son **ambas $I(1)$**, es posible regresar:
+
+$$y_t = \alpha + \beta x_t + u_t$$
+
+y si los **residuos de esa regresion son estacionarios**, entonces $y_t$ y $x_t$
+estan **cointegradas**, y $\hat\beta$ estima la relacion de cointegracion.
+
+Intuitivamente: las dos series comparten una **tendencia estocastica comun**.
+
+### La condicion, dicha con precision
+
+**Solo si ambas son $I(1)$ y los residuos son estacionarios el analisis por MCO es
+estadisticamente valido.** Si los residuos no son estacionarios, la regresion es
+**espuria** y no significa nada, por mas alto que sea el $R^2$.
+
+### Para que sirve: la lectura financiera
+
+La cointegracion es una medida de **dependencia de largo plazo**. Si dos precios
+estan cointegrados, aunque no sepamos donde va a estar cada uno en el futuro,
+**conociendo uno se puede determinar aproximadamente donde estara el otro**.
+
+Que los residuos sean estacionarios significa que **revierten a la media**. Si se
+piensa a esos residuos como un **spread** entre dos activos, un spread
+mean-reverting es exactamente la base de una estrategia de *pairs trading*.
+
+### Codigo generico (Engle-Granger en dos pasos)
+
+```python
+# paso 0: confirmar que las dos son I(1)
+adfuller(y, regression="c")     # no rechaza
+adfuller(x, regression="c")     # no rechaza
+adfuller(y.diff().dropna())     # rechaza
+adfuller(x.diff().dropna())     # rechaza
+
+# paso 1: la regresion de cointegracion
+reg = sm.OLS(y, sm.add_constant(x)).fit()
+
+# paso 2: testear estacionariedad de los residuos
+adfuller(reg.resid, regression="n")
+
+# o directamente
+from statsmodels.tsa.stattools import coint
+stat, pvalue, crit = coint(y, x)
+```
+
+**Detalle**: al testear los residuos con ADF, los valores criticos correctos **no**
+son los de Dickey-Fuller sino los de Engle-Granger (mas exigentes, porque los
+residuos son estimados). Por eso conviene usar `coint`, que ya los aplica.
+
+El desarrollo completo (VEC, rango de $\Pi$, Johansen) esta en la
+[Clase 8](Clase_08.md) y en la Clase 9.
+
+---
+
+# Parte F - El ejemplo del trigo, paso a paso
+
+## 17. Preparacion
+
+### Codigo
+
+```python
+import numpy as np, pandas as pd
+from statsmodels.tsa.stattools import adfuller
+
+df = pd.read_excel("Bases de Datos MIA103/wheat.xlsx")
+
+inicio = pd.to_datetime(df["yearmm"].iloc[0], format="%YM%m")
+df["date"] = pd.period_range(start=inicio, periods=len(df), freq="M")
+df = df.set_index("date")
+
+df["wheat_srw"] = pd.to_numeric(df["wheat_srw"], errors="coerce")
+
+x = np.log(df["wheat_srw"]).dropna()    # log-precio (niveles)
+y = x.diff().dropna()                   # retorno logaritmico (diferencias)
+```
+
+`format="%YM%m"` interpreta el formato `1980M01` de la Pink Sheet.
+`errors="coerce"` convierte a `NaN` cualquier valor no numerico en vez de romper.
 
 ```text
-p-value de la tendencia aproximado: 0.009
+observaciones en niveles: 501
+observaciones en diferencias: 500
+p_max de Schwert: 17
 ```
 
-Esto sugiere que en niveles el log-precio tiene tendencia, pero el ADF no alcanza
-a rechazar raiz unitaria.
+---
 
-### Paso 2: ADF en primeras diferencias
+## 18. Paso 1 - ADF sobre la serie en niveles
 
-Si no rechazamos raiz unitaria en niveles, miramos:
+### Codigo
+
+```python
+test = adfuller(x, regression="ct", autolag="t-stat", regresults=True)
+```
+
+### Salida verificada
+
+```text
+NIVELES  log(P), regression="ct":
+    Estadistico ADF : -3.1031
+    p-valor         :  0.1055
+    Rezagos         :  9
+    Valor critico 5%: -3.4195
+
+    En la regresion auxiliar, el coeficiente de la tendencia (x11):
+        coef = 6.769e-05    t = 2.609    p = 0.009   -> SIGNIFICATIVA
+```
+
+### Como leer la salida
+
+- $-3.1031 > -3.4195$: **no se rechaza $H_0$** al 5%. Y el p-value $0.1055 > 0.10$
+  tampoco permite rechazar al 10%. **La serie en niveles no es estacionaria.**
+- **La tendencia deterministica SI es significativa** ($p = 0.009$), asi que
+  corresponde mantener `"ct"`. Si se corriera con `"c"` el resultado seria
+  $ADF = -1.8591$ ($p = 0.3515$), aun mas lejos de rechazar.
+
+---
+
+## 19. Paso 2 - ADF sobre las primeras diferencias
+
+### Codigo
 
 ```python
 y = x.diff().dropna()
+test = adfuller(y, regression="ct", autolag="t-stat", regresults=True)
 ```
 
-ADF con constante y tendencia:
+### Salida verificada
 
 ```text
-Estadistico ADF: -8.3291
-p-valor:          0.0000
+DIFERENCIAS  dlog(P), regression="ct":
+    Estadistico ADF : -8.3291
+    p-valor         :  0.0000
+    Rezagos         :  8
+
+    Coeficiente de la tendencia (x10):
+        coef = 1.643e-05    t = 0.814    p = 0.416   -> NO significativa
+
+DIFERENCIAS  dlog(P), regression="c":     <- especificacion final
+    Estadistico ADF : -8.2930
+    p-valor         :  0.0000
+    Rezagos         :  8
+    Valor critico 5%: -2.8674
 ```
 
-La tendencia deterministica en diferencias no resulta significativa:
+### Como leer la salida
 
-```text
-p-value tendencia aproximado: 0.416
-```
-
-Entonces se repite sin tendencia:
-
-```python
-adfuller(y, regression="c", autolag="t-stat", regresults=True)
-```
-
-Salida:
-
-```text
-Estadistico ADF: -8.2930
-p-valor:          0.0000
-```
-
-### Conclusion
-
-El log-precio del trigo no rechaza raiz unitaria en niveles, pero sus primeras
-diferencias si rechazan raiz unitaria.
-
-Entonces:
-
-```text
-log(P_t) ~ I(1)
-Delta log(P_t) ~ I(0)
-```
-
-### Idea para recordar
-
-Orden de integracion se decide probando niveles y, si hace falta, diferencias.
-No alcanza con mirar un solo test aislado.
+- $-8.29 \ll -2.87$: **se rechaza $H_0$ contundentemente.** Las diferencias son
+  $I(0)$.
+- **La tendencia ya NO es significativa** ($p = 0.416$), asi que corresponde
+  repetir con `"c"`. Ese paso es el que hace el notebook y es la aplicacion
+  directa de la estrategia del punto 6.
 
 ---
 
-## 15. DFGLS
+## 20. Robustez con DFGLS
 
-### Microresumen teorico
-
-DFGLS es un test de raiz unitaria propuesto por Elliott, Rothenberg y Stock. Es
-similar al Dickey-Fuller, pero primero remueve componentes deterministas mediante
-una transformacion GLS.
-
-La hipotesis nula sigue siendo:
-
-```text
-H0: la serie contiene raiz unitaria
-```
-
-La alternativa:
-
-```text
-HA: la serie es debilmente estacionaria
-```
-
-### En Python
-
-El notebook usa la biblioteca `arch`:
+### Codigo
 
 ```python
 from arch.unitroot import DFGLS
+
+print(DFGLS(x, trend="ct", method="t-stat").summary())   # niveles
+print(DFGLS(y, trend="c",  method="t-stat").summary())   # diferencias
 ```
 
-Con constante:
+### Salida verificada
+
+```text
+DFGLS niveles      trend="ct":  stat = -2.1292   p = 0.2418   lags = 9
+DFGLS diferencias  trend="ct":  stat = -7.9704   p = 0.0000   lags = 8
+DFGLS diferencias  trend="c" :  stat = -8.2243   p = 0.0000   lags = 8
+```
+
+### Como leer la salida
+
+**ADF y DFGLS coinciden en todo**: no rechazan en niveles, rechazan
+contundentemente en diferencias. La conclusion es robusta.
+
+---
+
+## 21. Conclusion del ejemplo
+
+```text
+log(P_t)         : NO se rechaza raiz unitaria  ->  no estacionaria
+Delta log(P_t)   : SI se rechaza raiz unitaria  ->  I(0)
+
+Por lo tanto:    log(P_t) ~ I(1)
+                 los retornos logaritmicos son I(0)
+```
+
+Es exactamente el resultado canonico del punto 2: el log-precio es $I(1)$, el
+retorno es $I(0)$.
+
+### Como redactar esto en un examen
+
+```text
+Aplico el test ADF sobre el logaritmo del precio del trigo (501 observaciones
+mensuales). Empiezo con constante y tendencia deterministica lineal, y selecciono
+los rezagos con el criterio t-stat de Ng-Perron sobre una cota de Schwert
+p_max = 17.
+
+En niveles el estadistico ADF es -3.1031 con p-value 0.1055. Como el p-value es
+mayor a 0.10, no rechazo la hipotesis nula de raiz unitaria al 10%. La tendencia
+deterministica resulta significativa (p = 0.009), lo que justifica mantener la
+especificacion "ct".
+
+En primeras diferencias el estadistico ADF es -8.3291 con p-value menor a 0.0001,
+de modo que rechazo la hipotesis nula. Como la tendencia deterministica ya no es
+significativa (p = 0.416), repito el test sin tendencia y obtengo ADF = -8.2930,
+tambien con p-value menor a 0.0001.
+
+Concluyo que log(P_t) es I(1) y que sus primeras diferencias, los retornos
+logaritmicos, son I(0). El test DFGLS confirma la conclusion en ambos casos.
+```
+
+---
+
+## 22. Ejercitacion 6: precios y dinero
+
+### Guion
+
+Trabaja con `Precios_y_Dinero.xlsx` (mensual, enero 2003 a abril 2018) y **usa
+nivel de significancia del 5% en todos los tests**.
+
+| Ejercicio | Que pide | Como se resuelve |
+|---|---|---|
+| **1** | Graficar `m` e `ipc` | ambas crecen fuerte: sugiere series no estacionarias con tendencia |
+| **2** | Orden de integracion de `ipc` con ADF | ADF en niveles, despues en diferencias, hasta que sea $I(0)$ |
+| **3** | Idem para `m` | mismo procedimiento |
+| **4** | Construir `inflacion` y `crec_m` y mostrar que son $I(0)$ | las tasas son las primeras diferencias |
+| **5** | ACF y PACF de `inflacion` | tabla de identificacion de la [Clase 6](Clase_06.md) |
+| **6** | ACF y PACF de `crec_m` | idem |
+| **7** | Regresion `inflacion ~ crec_m` y autocorrelacion de residuos | ver abajo |
+
+### Codigo
 
 ```python
-DFGLS(y, trend="c", method="t-stat")
+df = pd.read_excel("Bases de Datos MIA103/Precios_y_Dinero.xlsx")
+df.columns = df.columns.str.strip()      # la columna de dinero es 'M ' con espacio
+
+inicio = pd.to_datetime(df['MMYY'].iloc[0]).strftime('%Y-%m')
+df["yearmm"] = pd.period_range(start=inicio, periods=len(df), freq="M")
+df = df.set_index("yearmm")
+
+df['IPC'] = df['IPC'].astype(float)
+df['M']   = df['M'].astype(float)
+
+# Ej. 2 y 3: niveles primero
+for v in ['IPC', 'M']:
+    print(v, adfuller(df[v], regression="ct", autolag="t-stat")[:2])
+
+# Ej. 4: las tasas
+df["infl"]   = df["IPC"].pct_change()
+df["crec_m"] = df["M"].pct_change()
+d = df[["infl","crec_m"]].dropna()
+
+for v in ['infl', 'crec_m']:
+    print(v, adfuller(d[v], regression="ct", autolag="t-stat")[:2])
 ```
 
-Con constante y tendencia:
+### El resultado esperado
+
+Los niveles de `IPC` y `M` **no** rechazan raiz unitaria; las tasas **si**. O sea:
+las dos series son $I(1)$ en niveles y sus tasas de crecimiento son $I(0)$.
+
+Los valores exactos de estos ADF estan verificados en la
+[Clase 8](Clase_08.md#18-chequeo-previo-de-estacionariedad-adf), que retoma
+la misma base:
+
+```text
+infl    con "ct": ADF = -7.7204   p = 0.0000   lags =  0
+crec_m  con "ct": ADF = -3.6720   p = 0.0243   lags = 14
+crec_m  con "c" : ADF = -3.1373   p = 0.0239   lags = 14
+```
+
+### El ejercicio 7 y su trampa
+
+El enunciado marca: **"cuando corremos regresiones con series de tiempo, las
+series involucradas deben tener el mismo orden de integracion"**. Por eso los
+ejercicios 2 a 4 van antes.
+
+Al correr `inflacion ~ crec_m`:
+
+**"Podemos decir que una mayor tasa de crecimiento de la base monetaria genera
+inflacion?"** **No.** Un coeficiente significativo muestra **asociacion
+contemporanea**, no causalidad. La herramienta correcta es el **test de
+causalidad de Granger dentro de un VAR**, que es exactamente el contenido de la
+[Clase 8](Clase_08.md) y de la Ejercitacion 7.
+
+**"Estan los residuos autocorrelacionados?"** Con datos mensuales de inflacion,
+casi seguro que si. Se chequea con Durbin-Watson, Ljung-Box o Breusch-Godfrey:
 
 ```python
-DFGLS(y, trend="ct", method="t-stat")
+from statsmodels.stats.diagnostic import acorr_ljungbox, acorr_breusch_godfrey
+
+reg = sm.OLS(d["infl"], sm.add_constant(d["crec_m"])).fit()
+
+print(acorr_ljungbox(reg.resid, lags=[6, 12], return_df=True))
+print(acorr_breusch_godfrey(reg, nlags=12))
 ```
 
-### Salidas del notebook
+**"Que haria si lo estuvieran?"** Tres opciones:
 
-DFGLS en niveles, con constante y tendencia:
-
-```text
-Test Statistic: -2.129
-P-value:         0.242
-Lags:            9
-Critical Values: -3.45 (1%), -2.89 (5%), -2.60 (10%)
-```
-
-No rechaza raiz unitaria en niveles.
-
-DFGLS en diferencias con constante y tendencia:
-
-```text
-Test Statistic: -7.970
-P-value:         0.000
-Lags:            8
-```
-
-Rechaza raiz unitaria.
-
-DFGLS en diferencias con constante:
-
-```text
-Test Statistic: -8.224
-P-value:         0.000
-Lags:            8
-```
-
-Tambien rechaza raiz unitaria.
-
-### Que significa
-
-DFGLS confirma la lectura del ADF: el log-precio del trigo se comporta como
-`I(1)` y sus retornos logaritmicos como `I(0)`.
-
-### Idea para recordar
-
-DFGLS se usa como contraste alternativo o chequeo de robustez. No cambia la
-pregunta, cambia la forma de construir el test.
+1. **Modelo dinamico**: agregar rezagos de las variables. Es el camino que lleva
+   naturalmente al VAR de la Clase 8.
+2. **Errores robustos a autocorrelacion (HAC / Newey-West)**: no cambia los
+   coeficientes, corrige los errores estandar.
+   ```python
+   reg_hac = sm.OLS(y, X).fit(cov_type='HAC', cov_kwds={'maxlags': 12})
+   ```
+3. **Modelar el error como ARMA** y estimar por GLS.
 
 ---
 
-## 16. Operador de rezagos
+## 23. Errores frecuentes
 
-### Microresumen teorico
-
-El operador de rezagos `L` desplaza una serie un periodo hacia atras:
-
-```text
-L x_t = x_{t-1}
-L^2 x_t = x_{t-2}
-L^k x_t = x_{t-k}
-```
-
-La primera diferencia puede escribirse:
-
-```text
-Delta y_t = y_t - y_{t-1} = (1-L)y_t
-```
-
-Un AR(p):
-
-```text
-y_t = rho_1 y_{t-1} + rho_2 y_{t-2} + ... + rho_p y_{t-p} + epsilon_t
-```
-
-se escribe:
-
-```text
-y_t(1 - rho_1 L - rho_2 L^2 - ... - rho_p L^p) = epsilon_t
-```
-
-Definimos:
-
-```text
-A(L) = 1 - rho_1 L - rho_2 L^2 - ... - rho_p L^p
-```
-
-Entonces:
-
-```text
-y_t A(L) = epsilon_t
-```
-
-### Idea para recordar
-
-El operador `L` permite escribir modelos con muchos rezagos de forma compacta.
+| Error | Por que pasa | Como se evita |
+|---|---|---|
+| Comparar el ADF contra $\pm1.96$ | se arrastra el habito del test $t$ | usar los criticos que devuelve `adfuller` |
+| Rechazar cuando el estadistico es **mayor** | el test es a cola izquierda | se rechaza si es **mas negativo** que el critico |
+| Confundir estacionariedad con estacionalidad | suenan parecido | no tienen relacion |
+| Interpretar los coeficientes de los rezagos $\Delta y_{t-i}$ | parecen parte del modelo | estan solo para blanquear residuos |
+| Dejar `"ct"` cuando la tendencia no es significativa | no se mira la regresion auxiliar | `regresults=True` y revisar el coeficiente de la tendencia |
+| Diferenciar una serie trend-stationary | se asume que todo se arregla diferenciando | quitarle la tendencia con una regresion contra $t$ |
+| Elegir el $p$ que da el p-value que conviene | tentacion | Ng-Perron o AIC/BIC, decidido **antes** |
+| Confundir la estructura de la tupla con `regresults=True` | los indices se corren | usar funciones de impresion distintas |
+| Regresar dos series $I(1)$ sin chequear cointegracion | sale $R^2$ altisimo | testear estacionariedad de los residuos |
+| Usar criticos de ADF sobre residuos estimados | son mas exigentes | usar `coint`, que aplica los de Engle-Granger |
+| Interpretar $R^2$ alto como buena regresion | puede ser espuria | primero el orden de integracion |
+| Pensar que raices complejas rompen la estacionariedad | asusta el $i$ | lo que importa es el **modulo** |
+| Creer que un MA puede ser no estacionario | se confunde con invertibilidad | MA siempre estacionario; lo que puede fallar es la invertibilidad |
 
 ---
 
-## 17. Raices y estacionariedad en AR
+## 24. Checklist de Clase 7
 
-### AR(1)
+Al terminar deberias poder:
 
-Un AR(1):
-
-```text
-y_t(1 - rho L) = epsilon_t
-```
-
-es estacionario si:
-
-```text
-|rho| < 1
-```
-
-Equivalentemente, la raiz de:
-
-```text
-1 - rho z = 0
-```
-
-debe estar fuera del circulo unitario:
-
-```text
-|z| > 1
-```
-
-### AR(2)
-
-Para:
-
-```text
-y_t = rho_1 y_{t-1} + rho_2 y_{t-2} + epsilon_t
-```
-
-el polinomio es:
-
-```text
-1 - rho_1 z - rho_2 z^2 = 0
-```
-
-El proceso es estacionario si todas las raices estan afuera del circulo unitario.
-
-### Ejemplo del PDF
-
-```text
-y_t = 0.75 y_{t-1} - 0.25 y_{t-2} + epsilon_t
-```
-
-Polinomio:
-
-```text
-1 - 0.75 z + 0.25 z^2 = 0
-```
-
-Las raices son complejas y tienen modulo:
-
-```text
-2
-```
-
-Como `2 > 1`, estan fuera del circulo unitario y el AR(2) es estacionario.
-
-### Idea para recordar
-
-Para AR(p), estacionariedad exige que las raices del polinomio AR esten fuera
-del circulo unitario.
+1. Enunciar las tres condiciones de estacionariedad debil.
+2. Distinguir estacionariedad debil de fuerte.
+3. Definir $I(0)$, $I(1)$, $I(2)$ y decir como se pasa de uno a otro.
+4. Explicar por que el log-precio es $I(1)$ y el retorno $I(0)$.
+5. Explicar por que hay que relacionar variables del mismo orden de integracion.
+6. Derivar la regresion de Dickey-Fuller restando $y_{t-1}$.
+7. Plantear $H_0$ y $H_A$ del ADF.
+8. Explicar por que los criticos no son los de la $t$ y por que son negativos.
+9. Explicar por que el test se "aumenta" con rezagos.
+10. Escribir la regresion auxiliar completa del ADF.
+11. Distinguir una serie con tendencia deterministica de una $I(1)$.
+12. Decir como se estacionariza cada una de las dos.
+13. Elegir entre `n`, `c`, `ct`, `ctt` y justificar la eleccion.
+14. Aplicar la regla de Ng-Perron y la cota de Schwert.
+15. Leer una salida de `adfuller` completa.
+16. Reproducir el estadistico ADF a mano con una regresion MCO.
+17. Explicar que es el DFGLS y por que tiene mas poder.
+18. Usar el operador de rezagos y escribir $A(L)$ y $B(L)$.
+19. Enunciar la condicion de estacionariedad de un AR($p$).
+20. Calcular las raices de un AR(2) y su modulo, incluido el caso complejo.
+21. Explicar por que un MA($q$) es siempre estacionario.
+22. Enunciar la condicion de estacionariedad de un ARMA.
+23. Distinguir estacionariedad (AR) de invertibilidad (MA).
+24. Calcular la media de un AR(1) con constante.
+25. Escribir la media y la varianza de un ARMA($p,q$).
+26. Explicar la reversion a la media y su uso financiero.
+27. Explicar que permite la invertibilidad (representacion AR($\infty$)).
+28. Calcular los coeficientes $g_i$ de la funcion impulso-respuesta.
+29. Calcular el efecto de largo plazo, el mean lag y el median lag.
+30. Definir cointegracion y decir que dos condiciones hacen falta.
+31. Explicar que es una regresion espuria y como se evita.
+32. Explicar la lectura financiera de la cointegracion (spread mean-reverting).
 
 ---
 
-## 18. Estacionariedad en MA y ARMA
-
-### MA(q)
-
-Un MA(q):
-
-```text
-y_t = theta_1 epsilon_{t-1}
-      + theta_2 epsilon_{t-2}
-      + ...
-      + theta_q epsilon_{t-q}
-      + epsilon_t
-```
-
-es estacionario si los coeficientes `theta_i` son finitos.
-
-Intuicion: es una combinacion finita de shocks i.i.d.; por eso no acumula shocks
-infinitamente como un random walk.
-
-### ARMA(p,q)
-
-Un ARMA(p,q):
-
-```text
-y_t = rho_1 y_{t-1} + ... + rho_p y_{t-p}
-      + theta_1 epsilon_{t-1} + ... + theta_q epsilon_{t-q}
-      + epsilon_t
-```
-
-puede escribirse:
-
-```text
-y_t A(L) = B(L) epsilon_t
-```
-
-donde:
-
-```text
-A(L) = 1 - rho_1 L - ... - rho_p L^p
-B(L) = 1 + theta_1 L + ... + theta_q L^q
-```
-
-El ARMA es estacionario si la parte MA tiene coeficientes finitos y las raices de
-la parte AR estan fuera del circulo unitario.
-
-### Idea para recordar
-
-La estacionariedad de un ARMA la manda la parte AR.
-
----
-
-## 19. Media y varianza de un AR(1) con constante
-
-### Microresumen teorico
-
-Si:
-
-```text
-y_t = c + rho y_{t-1} + epsilon_t
-```
-
-y el proceso es estacionario, entonces:
-
-```text
-E(y_t) = E(y_{t-1}) = mu
-```
-
-Tomando esperanza:
-
-```text
-mu = c + rho mu
-mu(1-rho) = c
-mu = c / (1-rho)
-```
-
-La varianza es:
-
-```text
-Var(y_t) = sigma_epsilon^2 / (1-rho^2)
-```
-
-La constante cambia la media, pero no cambia la condicion de estacionariedad ni
-la formula de varianza alrededor de la media.
-
-### ARMA general
-
-Para:
-
-```text
-y_t = c + rho_1 y_{t-1} + ... + rho_p y_{t-p}
-      + theta_1 epsilon_{t-1} + ... + theta_q epsilon_{t-q}
-      + epsilon_t
-```
-
-si es estacionario:
-
-```text
-E(y_t) = c / (1 - sum_{j=1}^{p} rho_j)
-```
-
-### Idea para recordar
-
-En un AR estacionario, la constante determina la media de largo plazo.
-
----
-
-## 20. Invertibilidad e impulso-respuesta
-
-### Microresumen teorico
-
-Un ARMA estacionario puede escribirse como:
-
-```text
-y_t = c* + G(L) epsilon_t
-```
-
-donde:
-
-```text
-G(L) = B(L) A(L)^(-1)
-```
-
-Si la parte MA es invertible, tambien puede escribirse como un AR infinito.
-
-### Shock e impulso-respuesta
-
-Si introducimos un shock de una unidad en el periodo `t`, los coeficientes:
-
-```text
-G(L) = 1 + g_1 L + g_2 L^2 + ...
-```
-
-dicen cuanto afecta ese shock a:
-
-```text
-y_t, y_{t+1}, y_{t+2}, ...
-```
-
-La funcion:
-
-```text
-g_s
-```
-
-se llama funcion de impulso-respuesta. Mide el efecto del shock sobre `y_{t+s}`.
-
-La suma:
-
-```text
-G(1) = 1 + g_1 + g_2 + ...
-```
-
-es el efecto de largo plazo del shock.
-
-### Mean lag y median lag
-
-El `mean lag` mide un tiempo promedio ponderado de respuesta:
-
-```text
-Mean lag = [sum i g_i] / [sum g_i] = G(1)^(-1) G'(1)
-```
-
-El `median lag` mide el tiempo hasta que se incorpora la mitad del efecto de largo
-plazo.
-
-### Ejemplo del PDF
-
-Para:
-
-```text
-y_t = 0.03 + 0.75 y_{t-1} - 0.25 y_{t-2}
-      + epsilon_t + 0.5 epsilon_{t-1}
-```
-
-el PDF plantea:
-
-```text
-A(L) = 1 - 0.75L + 0.25L^2
-B(L) = 1 + 0.5L
-G(L) = A(L)^(-1) B(L)
-```
-
-Los primeros coeficientes son:
-
-```text
-g_1 = 1.25
-g_2 = 11/16
-g_3 = 13/64
-g_4 = -5/256
-```
-
-El efecto de largo plazo del ejemplo es `3`, el mean lag es `0.833` y el median
-lag es `0.4`.
-
-### Idea para recordar
-
-Impulso-respuesta traduce un shock de hoy en efectos dinamicos futuros.
-
----
-
-## 21. Cointegracion inicial
-
-### Microresumen teorico
-
-Supongamos dos series:
-
-```text
-y_t ~ I(1)
-x_t ~ I(1)
-```
-
-Estimamos:
-
-```text
-y_t = alpha + beta x_t + u_t
-```
-
-Si los residuos estimados:
-
-```text
-e_t = y_t - alphahat - betahat x_t
-```
-
-son estacionarios, entonces `y_t` y `x_t` estan cointegradas.
-
-### Que significa
-
-Aunque las dos series sean no estacionarias individualmente, existe una
-combinacion lineal estacionaria. Eso significa que comparten una tendencia
-estocastica comun.
-
-En finanzas, el residuo puede interpretarse como un spread. Si ese spread es
-estacionario, revierte a su media.
-
-### Lectura economica
-
-Cointegracion es dependencia de largo plazo. No dice que sepamos exactamente
-donde estaran los precios en el futuro, pero si una relacion estable entre ellos.
-
-### Idea para recordar
-
-Dos series `I(1)` pueden moverse mucho, pero si estan cointegradas no se separan
-indefinidamente.
-
----
-
-## 22. Practica 7 como puente a Clase 8
-
-### Que pide el archivo `MIA103_Ejer_7_.pdf`
-
-La ejercitacion pide investigar, con la base `Precios_y_Dinero.xlsx`, si una
-mayor tasa de crecimiento de la base monetaria causa en sentido de Granger una
-mayor tasa de inflacion.
-
-Pide:
-
-- plantear un VAR;
-- elegir cantidad de rezagos con criterio optimo;
-- verificar estabilidad del VAR;
-- testear causalidad de Granger;
-- usar nivel de significancia del 10%.
-
-### Por que lo dejamos para Clase 8
-
-Aunque el archivo se llama Ejercitacion 7, el contenido es VAR y causalidad de
-Granger, que en el mapa del curso corresponde a Clase 8.
-
-Para Clase 7, la practica natural es determinar orden de integracion con ADF y
-DFGLS. Para Clase 8, esta ejercitacion va a ser central.
-
-### Idea para recordar
-
-Antes de VAR/Granger conviene tener clara Clase 7: estacionariedad e integracion.
-Un VAR estable normalmente se trabaja con variables estacionarias o con el
-tratamiento adecuado si son `I(1)`.
-
----
-
-## 23. Checklist de Clase 7
-
-Al terminar esta clase deberias poder explicar:
-
-1. Que significa estacionariedad debil.
-2. Diferencia entre estacionariedad debil y fuerte.
-3. Que significa que una serie sea `I(0)`.
-4. Que significa que una serie sea `I(1)`.
-5. Por que diferenciar cambia la pregunta economica.
-6. Que testea el ADF.
-7. Por que la hipotesis nula del ADF es raiz unitaria.
-8. Por que el estadistico ADF no usa tabla t convencional.
-9. Para que sirven los rezagos en el ADF.
-10. Como elegir entre constante, tendencia o ninguna.
-11. Diferencia entre tendencia deterministica y raiz unitaria.
-12. Como decidir el orden de integracion con niveles y diferencias.
-13. Que muestra el ejemplo del trigo.
-14. Que agrega DFGLS respecto del ADF.
-15. Como funciona el operador de rezagos.
-16. Que condicion de raices hace estacionario a un AR(p).
-17. Por que un MA(q) es estacionario si sus coeficientes son finitos.
-18. Que rol cumple la parte AR en la estacionariedad de un ARMA.
-19. Que es una funcion impulso-respuesta.
-20. Que significa cointegracion como relacion de largo plazo.
-
-## Observaciones tecnicas antes de ejecutar
-
-- El notebook carga `wheat.xlsx` como si estuviera en el directorio actual. Desde
-  la raiz del repositorio conviene usar `Bases de Datos MIA103/wheat.xlsx`.
-- Para ejecutar el notebook se necesitan `statsmodels`, `openpyxl` y, para
-  DFGLS, `arch`.
-- El notebook instala `arch` con `pip install arch`; si se trabaja localmente,
-  conviene instalar dependencias antes de correrlo.
-- Los resultados numericos del ADF guardados en el notebook indican que
-  `log(wheat_srw)` es `I(1)` y `Delta log(wheat_srw)` es `I(0)`.
-- La `Ejercitacion 7` de VAR/Granger queda reservada para el bloque de Clase 8,
-  porque ahi encaja conceptualmente.
+## 25. Notas tecnicas
+
+- Dependencias: `numpy`, `pandas`, `matplotlib`, `statsmodels`, `openpyxl` y
+  **`arch`** (para DFGLS; se instala con `pip install arch`).
+- El notebook lee `wheat.xlsx` sin ruta; en el repo esta en
+  `Bases de Datos MIA103/`.
+- La columna `yearmm` viene en formato `1980M01`: se parsea con
+  `pd.to_datetime(..., format="%YM%m")`.
+- `adfuller` devuelve una tupla cuya **estructura cambia** con `regresults=True`.
+  Sin el flag: `(stat, pvalue, usedlag, nobs, critvalues, icbest)`. Con el flag,
+  `critvalues` pasa al indice 2 y el objeto de resultados al 3.
+- El `regression=` de `statsmodels` equivale al `trend=` de `arch`, pero `arch`
+  solo acepta `"c"` y `"ct"` en `DFGLS`.
+- En la regresion auxiliar de `adfuller`, los regresores se llaman `x1`, `x2`,
+  ..., `const`. **La tendencia es el ultimo `xN`**, despues de `const`: hay que
+  contar para identificarla.
+- El p-value del ADF se interpola de tablas (MacKinnon). Un `0.0000` significa
+  "menor al menor valor tabulado", no exactamente cero.
+- Los resultados de `autolag="AIC"` y `autolag="t-stat"` suelen coincidir; `BIC`
+  tiende a elegir bastante menos rezagos.

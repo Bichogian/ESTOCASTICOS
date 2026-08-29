@@ -1,506 +1,846 @@
-# Clase 1 - Teoria + practica + Python
+# Clase 1 - Retornos, distribuciones y momentos
 
-[← Volver al indice general](../Res+Pra.md)
+[Volver al indice general](../Res+Pra.md)
 
-Esta guia cruza la teoria de la Clase 1 con sus notebooks, la ejercitacion y las salidas obtenidas.
+Mapa completo de la Clase 1: teoria del PDF, codigo de los notebooks y
+Ejercitacion 1. Cada tema sigue el mismo recorrido:
 
-En cada tema seguimos siempre el mismo recorrido:
+$$\text{teoria} \;\rightarrow\; \text{para que sirve} \;\rightarrow\; \text{codigo generico} \;\rightarrow\; \text{como leer la salida}$$
 
-```text
-microteoria -> en Python lo hacemos asi -> salida del ejemplo -> que significa -> idea para recordar
-```
-
-Las salidas numericas pertenecen a los ejemplos guardados en los notebooks. Si se actualiza la fuente de Yahoo Finance, los numeros pueden cambiar sin que cambie la interpretacion.
-
-## Retornos, distribuciones y momentos
-
-## Archivos que vamos a usar
+## Archivos de esta clase
 
 | Tipo | Archivo | Para que se usa |
 |---|---|---|
-| Teoria | `Clases/MIA103_Clase_1.pdf` | Definiciones de retornos, distribuciones y momentos |
-| Python | `Codigos/MIA103_2026_Clase_01_01.ipynb` | Precios del S&P 500, retornos, estadisticos, QQ plot y Jarque-Bera |
-| Python | `Codigos/MIA103_2026_Clase_01_02_Mixtura.ipynb` | Densidades normales, mixtura, momentos y comportamiento de las colas |
-| Practica | `Practicas/MIA103_Ejer_1.pdf` | Ejercicios de aplicacion |
-| Solucion | `Practicas/MIA103_Ejer_1_Sol.pdf` | Control de los resultados de la practica |
+| Teoria | `Clases/MIA103_Clase_1.pdf` | Retornos, normal, momentos, Jarque-Bera, QQ plot |
+| Python | `Codigos/MIA103_2026_Clase_00_Intro_practica.ipynb` | Repaso de numpy / pandas / matplotlib |
+| Python | `Codigos/MIA103_2026_Clase_01_01.ipynb` | S&P 500: retornos, descriptivos, QQ plot, Jarque-Bera |
+| Python | `Codigos/MIA103_2026_Clase_01_02_Mixtura.ipynb` | Mixtura de normales y sus momentos |
+| Practica | `Practicas/MIA103_Ejer_1.pdf` (+ `_Sol.pdf`) | Ejercicios 1 a 3 |
+| Resuelta | `Practicas_Resueltas/Respuestas_1.ipynb` | Resolucion propia con MELI |
 | Datos | `Bases de Datos MIA103/SP500_.xlsx` | Serie local del S&P 500 |
 
-## Orden de estudio y notebook correspondiente
+## Mapa tema - PDF - notebook - practica
 
-| Paso | Tema | Notebook |
-|---:|---|---|
-| 1 | Precios y construccion de retornos | `MIA103_2026_Clase_01_01.ipynb` |
-| 2 | Estadisticos descriptivos y momentos | `MIA103_2026_Clase_01_01.ipynb` |
-| 3 | Estandarizacion y QQ plot | `MIA103_2026_Clase_01_01.ipynb` |
-| 4 | Test de Jarque-Bera | `MIA103_2026_Clase_01_01.ipynb` |
-| 5 | Densidad normal y mixtura de normales | `MIA103_2026_Clase_01_02_Mixtura.ipynb` |
-| 6 | Momentos y colas de la mixtura | `MIA103_2026_Clase_01_02_Mixtura.ipynb` |
+| # | Tema | PDF | Notebook | Practica |
+|---:|---|---|---|---|
+| 1 | Retorno simple y bruto | p. 2 | `01_01` celda 10 | Ej. 3a |
+| 2 | Retorno logaritmico y Taylor | p. 3-5 | `01_01` celda 10 | Ej. 3e |
+| 3 | Aditividad temporal del log-retorno | p. 6-7 | - | Ej. 3e |
+| 4 | Ejercicios 1 y 2 del PDF | p. 7, 9-10 | - | - |
+| 5 | Normal, estandarizacion | p. 11-13 | `01_01` celda 19 | - |
+| 6 | Media-varianza y nivel de perdida | p. 14-15 | - | - |
+| 7 | Asimetria | p. 17-18 | `01_01` celda 22 | Ej. 3b |
+| 8 | Curtosis y curtosis en exceso | p. 18-19 | `01_01` celda 22 | Ej. 3b |
+| 9 | Momentos de la normal estandar | p. 20 | - | Ej. 1 |
+| 10 | Jarque-Bera | p. 21 | `01_01` celda 22 | Ej. 3d |
+| 11 | QQ plot | p. 22-23 | `01_01` celdas 19-20 | - |
+| 12 | Mixtura de normales | - | `01_02` completo | Ej. 2 |
 
-## 1. Precios y retornos
+---
 
-### Microresumen teorico
+# Parte A - Retornos
 
-Un precio `P_t` indica cuanto vale un activo en el momento `t`. Para comparar variaciones entre momentos usamos retornos.
+## 1. Retorno simple
 
-El retorno simple es:
+### Teoria
 
-```text
-R_t = (P_t - P_{t-1}) / P_{t-1} = P_t / P_{t-1} - 1
-```
+Si $P_t$ es el precio del activo en el momento $t$:
 
-El retorno logaritmico es:
+$$R_t \;=\; \frac{P_t - P_{t-1}}{P_{t-1}} \;=\; \frac{P_t}{P_{t-1}} - 1$$
 
-```text
-r_t = ln(P_t / P_{t-1}) = ln(P_t) - ln(P_{t-1})
-```
+- $R_t$ es el **retorno neto**.
+- $1 + R_t = \dfrac{P_t}{P_{t-1}}$ es el **retorno bruto**.
 
-Para variaciones pequeñas, ambos son muy parecidos. El retorno simple tiene una interpretacion porcentual directa. El retorno logaritmico es aditivo en el tiempo, por lo que resulta especialmente util en series temporales.
+### Para que sirve
 
-### En Python lo hacemos asi
+Es lo que efectivamente se gana o se pierde. Si invertiste 100 pesos y
+$R_t = 0.03$, tenes 103. Todo calculo de plata real usa retorno simple.
 
-Notebook: `MIA103_2026_Clase_01_01.ipynb`.
+### Codigo generico
 
 ```python
-df['Return_pct'] = df['Adj Close'].pct_change()
-df['Return_log'] = np.log(df['Adj Close'] / df['Adj Close'].shift(1))
+import pandas as pd
+
+# df tiene una columna de precios ordenada por fecha
+df["ret_simple"] = df["Precio"].pct_change()
 ```
 
-`pct_change()` compara el precio actual con el anterior. `shift(1)` desplaza la serie un periodo y permite construir manualmente el cociente `P_t / P_{t-1}`.
+`pct_change()` hace exactamente $P_t/P_{t-1} - 1$. Equivale a
+`df["Precio"]/df["Precio"].shift(1) - 1`.
 
-### Salida del ejemplo de la clase
+### Como leer la salida
 
-| Fecha | Precio ajustado | Retorno simple | Retorno logaritmico |
-|---|---:|---:|---:|
-| 2021-06-01 | 4202.040039 | `NaN` | `NaN` |
-| 2021-06-02 | 4208.120117 | 0.001447 | 0.001446 |
-| 2021-06-03 | 4192.850098 | -0.003629 | -0.003635 |
-| 2021-06-04 | 4229.890137 | 0.008834 | 0.008795 |
+La **primera fila siempre es `NaN`**: no hay $P_{t-1}$ para la primera
+observacion. Por eso despues siempre va un `.dropna()`.
 
-### Que significa esta salida
+Los valores vienen en tanto por uno: `0.0123` es un retorno de 1.23%.
 
-- El primer retorno es `NaN` porque no existe un precio anterior con el cual comparar la primera observacion.
-- El 2 de junio el retorno simple fue `0.001447`, aproximadamente `0.1447%`.
-- El 3 de junio el retorno fue negativo: el indice bajo aproximadamente `0.3629%`.
-- El retorno simple y el logaritmico son casi iguales porque las variaciones diarias son pequeñas.
+---
+
+## 2. Retorno logaritmico
+
+### Teoria
+
+$$r_t \;=\; \ln\!\left(\frac{P_t}{P_{t-1}}\right) \;=\; \ln(P_t) - \ln(P_{t-1}) \;=\; \Delta \ln (P_t)$$
+
+Es el logaritmo del retorno bruto. La relacion con el simple sale de un
+polinomio de Taylor de grado 1 alrededor de $x_0 = 1$:
+
+$$\ln(x) \;\approx\; \ln(1) + \frac{1}{1}(x-1) \;=\; x - 1$$
+
+Aplicado al retorno bruto:
+
+$$r_t = \ln(1 + R_t) \;\approx\; R_t$$
+
+### Para que sirve
+
+Dos razones concretas:
+
+1. **Se suman en el tiempo** (ver punto 3), lo que simplifica todo el analisis de
+   series de tiempo.
+2. Es la transformacion que usamos en toda la materia para pasar de un precio con
+   tendencia a una serie estacionaria.
+
+### La aproximacion no siempre es buena
+
+$$\ln(1.02) = 0.01980263 \approx 0.02 \quad \text{(muy buena)}$$
+
+$$\ln(1.25) = 0.223144 \qquad \ln(0.75) = -0.287682 \quad \text{(mala)}$$
+
+Con retornos grandes la diferencia importa. Y notar la asimetria: **en
+logaritmos, los retornos negativos se hacen mas negativos y los positivos menos
+positivos**. Esto es clave al medir riesgo, porque el riesgo vive en la cola
+izquierda.
+
+### Codigo generico
+
+```python
+import numpy as np
+
+df["ret_log"] = np.log(df["Precio"] / df["Precio"].shift(1))
+# equivalente:
+df["ret_log"] = np.log(df["Precio"]).diff()
+```
+
+### Como leer la salida
+
+Para retornos diarios normales, `ret_log` y `ret_simple` van a ser casi
+identicos (difieren en la 4a o 5a decimal). Si ves diferencias grandes, es que
+hubo un movimiento fuerte ese dia.
+
+---
+
+## 3. Aditividad temporal del retorno logaritmico
+
+### Teoria
+
+Los log-retornos diarios de una semana suman el log-retorno semanal:
+
+$$r_1 + r_2 + r_3 + r_4 + r_5 = \ln\frac{P_1}{P_0} + \ln\frac{P_2}{P_1} + \cdots + \ln\frac{P_5}{P_4}$$
+
+La suma telescopica deja:
+
+$$= \ln(P_5) - \ln(P_0) = \ln\!\left(\frac{P_5}{P_0}\right)$$
+
+Los retornos **simples no tienen esta propiedad**: hay que multiplicar retornos
+brutos, no sumar netos.
+
+### Para que sirve
+
+Convertir frecuencias sin esfuerzo: diario a mensual, mensual a anual. Y es lo
+que se pide verificar en el Ejercicio 3e.
+
+### Codigo generico
+
+```python
+# suma de log-retornos diarios de un mes
+suma_diarios = df.loc["2025-06", "ret_log"].sum()
+
+# log-retorno directo del mes: precio final vs precio del dia previo al mes
+precio_fin = df.loc["2025-06", "Precio"].iloc[-1]
+pos = df.index.get_loc(df.loc["2025-06"].index[0])
+precio_ini = df["Precio"].iloc[pos - 1]
+
+directo = np.log(precio_fin / precio_ini)
+
+print(suma_diarios, directo)   # deben coincidir
+```
+
+### Como leer la salida
+
+Los dos numeros tienen que dar **exactamente lo mismo** (salvo error de redondeo
+en la decimal 15). Si no coinciden, casi siempre es porque tomaste como precio
+inicial el primer precio *del* mes en vez del ultimo precio del mes *anterior*.
+
+---
+
+## 4. Los dos ejercicios del PDF
+
+### Ejercicio 1
+
+*Un activo tiene retorno logaritmico diario de $-2\%$ durante 5 dias. Si $P_0 = 130$,
+cuanto vale $P_5$?*
+
+Por aditividad, el log-retorno de la semana es $5 \times (-0.02) = -0.10$:
+
+$$\ln\!\left(\frac{P_5}{P_0}\right) = -0.10 \;\Longrightarrow\; \ln(P_5) = \ln(130) - 0.10 = 4.76753$$
+
+$$P_5 = e^{4.76753} = 117.63$$
+
+```python
+P5 = 130 * np.exp(-0.10)     # 117.63
+```
+
+**Ojo con el error tipico:** $130 \times (1 - 0.10) = 117.00$ esta **mal**. El
+$-10\%$ es logaritmico, no simple.
+
+### Ejercicio 2
+
+*El retorno logaritmico promedio diario fue $0.177\%$ en un mes de 20 dias. Cual
+es el retorno simple acumulado del mes?*
+
+Si $\bar{x} = \frac{1}{n}\sum x_i$, entonces $\sum x_i = n\bar{x}$:
+
+$$\sum_{i=1}^{20} r_i = 20 \times 0.00177 = 0.0354$$
+
+$$\frac{P_{20}}{P_0} = e^{0.0354} = 1.036 \;\Longrightarrow\; R = 1.036 - 1 = 3.6\%$$
+
+```python
+R = np.exp(20 * 0.00177) - 1   # 0.0360
+```
 
 ### Idea para recordar
 
-El precio es un nivel; el retorno mide la variacion relativa. Para estudiar riesgo y distribuciones normalmente trabajamos con retornos, no directamente con precios.
+Para pasar de log a simple: $R = e^{r} - 1$. Para pasar de simple a log:
+$r = \ln(1+R)$.
 
-## 2. Estadisticos descriptivos y momentos
+---
 
-### Microresumen teorico
+# Parte B - Cargar datos y describirlos
 
-Los momentos resumen distintas caracteristicas de una distribucion:
+## 5. Traer precios a un DataFrame
 
-- Media: ubicacion o retorno promedio.
-- Varianza y desvio estandar: dispersion o volatilidad.
-- Asimetria: falta de simetria entre las colas.
-- Curtosis: peso de las colas y concentracion respecto de una normal.
+### Codigo generico
 
-Una normal tiene asimetria `0` y curtosis total `3`. Si usamos exceso de curtosis, la normal tiene valor `0`.
-
-### En Python lo hacemos asi
+Dos caminos, los dos usados en clase:
 
 ```python
-df['Return_pct'].describe()
+# A) desde un Excel local
+df = pd.read_excel("Bases de Datos MIA103/SP500_.xlsx", sheet_name=0)
+
+# B) descargando de Yahoo Finance
+import yfinance as yf
+
+sp500 = yf.download('^GSPC', start='2021-06-01', end='2026-03-01',
+                    interval='1d', auto_adjust=True)
+
+df = sp500[['Close']].reset_index()
+df.columns = ['Date', 'Adj Close']
+
+# limpieza estandar, siempre igual
+df = df.dropna()
+df['Date'] = pd.to_datetime(df['Date'])
+df = df.sort_values('Date')
 ```
 
-### Salida del ejemplo de la clase
+### Como leer la salida
 
-```text
-count    1191.000000
-mean        0.000471
-std         0.010724
-min        -0.059750
-25%        -0.004696
-50%         0.000813
-75%         0.006052
-max         0.095154
-```
+- `auto_adjust=True` ajusta por dividendos y splits. Sin eso, un split aparece
+  como una caida enorme que no es un retorno real.
+- Si `yfinance` devuelve columnas con dos niveles (MultiIndex), se accede como
+  `df_meli["Close"]["MELI"]`. Es lo que aparece en `Respuestas_1.ipynb`.
+- **Siempre ordenar por fecha antes de calcular retornos.** Si el DataFrame esta
+  desordenado, `pct_change()` devuelve basura sin avisar.
 
-### Que significa esta salida
+---
 
-- Hay 1191 retornos validos.
-- La media diaria es `0.000471`, aproximadamente `0.0471%`.
-- El desvio estandar diario es `0.010724`, aproximadamente `1.0724%`; esta es una medida de volatilidad diaria.
-- El peor retorno de la muestra fue cercano a `-5.975%`.
-- El mejor fue cercano a `9.515%`.
-- La mediana fue `0.0813%`. Que media y mediana no coincidan exactamente ya sugiere que la distribucion no es perfectamente simetrica.
+## 6. Estadisticos descriptivos: media y volatilidad
 
-### Idea para recordar
+### Teoria
 
-La media habla del centro; el desvio habla del riesgo alrededor de ese centro. Minimo, maximo y cuantiles ayudan a ver lo que una unica medida promedio oculta.
+Sobre una muestra de $n$ observaciones:
 
-## 3. Estandarizacion y QQ plot
+$$\bar{x} = \frac{\sum_{i=1}^{n} x_i}{n} \qquad\qquad s^2 = \frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n-1}$$
 
-### Microresumen teorico
+$$s = \sqrt{s^2}$$
 
-Estandarizar un retorno significa restarle su media y dividirlo por su desvio estandar:
+A ese desvio estandar $s$ lo llamamos **volatilidad** del retorno.
 
-```text
-z_t = (R_t - media) / desvio
-```
+### Para que sirve
 
-La nueva variable queda expresada en cantidad de desvios estandar respecto de la media. El QQ plot compara los cuantiles observados con los cuantiles que tendria una distribucion normal.
+La media dice cuanto rinde en promedio; la volatilidad, cuanto se mueve. Son los
+dos numeros del criterio media-varianza: entre dos activos con la misma media,
+preferimos el de menor volatilidad.
 
-### En Python lo hacemos asi
+### Codigo generico
 
 ```python
-retornos = df['Return_pct'].dropna()
-retornos_estandarizados = (
-    retornos - retornos.mean()
-) / retornos.std()
+ret = df["ret_simple"].dropna()
 
-stats.probplot(retornos_estandarizados, dist='norm', plot=plt)
+print(ret.describe())        # count, mean, std, min, cuartiles, max
+
+media = ret.mean()
+vol   = ret.std()            # pandas usa n-1 por defecto
 ```
 
-El notebook tambien muestra la alternativa de `statsmodels`:
+### Como leer la salida
+
+- `pandas` `.std()` divide por $n-1$; `numpy` `.std()` divide por $n$ salvo que
+  pases `ddof=1`. Con miles de datos la diferencia es despreciable, pero conviene
+  saberlo.
+- La volatilidad sale en la misma frecuencia que los datos. Para anualizar
+  volatilidad diaria: $\sigma_{anual} = \sigma_{diario}\sqrt{252}$.
+- Un valor tipico de volatilidad diaria de un indice es 0.01 (1%); de una accion
+  individual, 0.02-0.03.
+
+---
+
+## 7. Normal, estandarizacion y criterio media-varianza
+
+### Teoria
+
+La densidad de $X \sim N(\mu, \sigma^2)$ es:
+
+$$f(x \mid \mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}}\; e^{-\frac{(x-\mu)^2}{2\sigma^2}}, \qquad x \in \mathbb{R}$$
+
+**Estandarizar** es redefinir la variable para que tenga media 0 y varianza 1:
+
+$$Z = \frac{X - \mu}{\sigma} \;\sim\; N(0,1)$$
+
+Esto funciona por las propiedades:
+
+$$E(a + bX) = a + bE(X) \qquad Var(a + bX) = b^2 Var(X)$$
+
+### Para que sirve
+
+Estandarizar permite comparar variables con escalas distintas y es el paso previo
+obligatorio para el QQ plot, la asimetria y la curtosis (que son medidas de
+**forma**, y por lo tanto se calculan sobre la variable estandarizada).
+
+### Nivel minimo de retorno con confianza $cl$
+
+Bajo normalidad, si $\alpha_{cl}$ es el valor critico tal que
+$P(Z \le \alpha_{cl}) = 1 - cl$, entonces el retorno minimo al $cl \cdot 100\%$
+de confianza es:
+
+$$X = \mu + \alpha_{cl}\,\sigma$$
+
+Para $cl = 99\%$: $\alpha_{cl} = -2.33$, entonces $X = \mu - 2.33\sigma$.
+
+### Codigo generico
 
 ```python
-sm.qqplot(retornos_estandarizados, line='s', fit=True)
+from scipy.stats import norm
+
+z = (ret - ret.mean()) / ret.std()      # estandarizar
+
+alpha = norm.ppf(0.01)                  # -2.3263  (cola izquierda al 99%)
+peor_retorno = ret.mean() + alpha * ret.std()
 ```
 
-### Salida del ejemplo de la clase
+### Como leer la salida
 
-La salida es un grafico. Si los retornos fueran aproximadamente normales, los puntos quedarian cerca de la recta de referencia. En el ejemplo del S&P 500, los mayores desvios aparecen en los extremos.
+`norm.ppf(p)` devuelve el valor $z$ que deja probabilidad $p$ a la izquierda:
 
-### Que significa esta salida
+| confianza | $p$ de cola | $\alpha_{cl}$ |
+|---|---|---|
+| 95% | 0.05 | $-1.6449$ |
+| 99% | 0.01 | $-2.3263$ |
 
-Los desvios en las colas indican que los eventos extremos ocurren de una manera distinta a la que predice una normal. El QQ plot sirve como diagnostico visual, pero no reemplaza un contraste formal.
+El resultado se lee: "con 99% de confianza, la perdida diaria no supera X".
 
-### Idea para recordar
+**Limitacion importante que marca el PDF:** este calculo supone normalidad. Como
+los retornos reales tienen colas pesadas, el metodo **subestima** el riesgo de
+eventos extremos.
 
-Centro alineado y colas desviadas significa que una normal puede describir razonablemente observaciones comunes, pero representar mal los episodios extremos.
+---
 
-## 4. Test de Jarque-Bera
+# Parte C - Momentos: forma de la distribucion
 
-### Microresumen teorico
+## 8. Asimetria (skewness)
 
-Jarque-Bera contrasta conjuntamente la asimetria y la curtosis.
+### Teoria
 
-```text
-H0: los datos son compatibles con una distribucion normal
-H1: los datos no son compatibles con una distribucion normal
-```
+$$S = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{x_i - \bar{x}}{s}\right)^3$$
 
-Su estadistico es:
+- $S > 0$: **asimetria positiva**, cola derecha pesada.
+- $S < 0$: **asimetria negativa**, cola izquierda pesada.
+- $S = 0$: simetrica (la normal tiene $S=0$).
 
-```text
-JB = n/6 * [S^2 + (K - 3)^2 / 4]
-```
+### Para que sirve
 
-donde `S` es la asimetria y `K` es la curtosis total.
+En finanzas la asimetria negativa es la mala: significa que los eventos extremos
+son mayoritariamente perdidas. Un activo con $S<0$ tiene mas riesgo de cola del
+que sugiere su volatilidad.
 
-### En Python lo hacemos asi
+### Codigo generico
 
 ```python
-jb_stat, jb_pvalue = stats.jarque_bera(retornos)
+from scipy import stats
 
-print(f'P-valor: {jb_pvalue:.4f}')
-print(f'Estadistico de Jarque-Bera: {jb_stat:.4f}')
+# forma manual, tal como la formula
+S = (((ret - ret.mean()) / ret.std())**3).mean()
+
+# forma directa
+S = stats.skew(ret)
 ```
 
-### Salida del ejemplo de la clase
+### Como leer la salida
 
-```text
-P-valor: 0.0000
-Estadistico de Jarque-Bera: 2656.0862
-Asimetria: 0.1655
-Curtosis: 10.3085
-```
+Los dos numeros difieren un poco porque la formula manual usa `ret.std()`
+(divisor $n-1$) y `stats.skew` usa el divisor $n$. Para $n$ grande la diferencia
+es minima. El notebook de clase muestra ambas justamente para que se vea.
 
-### Que significa esta salida
+---
 
-Como el `p-value` es menor que `0.05`, rechazamos `H0`. Los retornos del ejemplo no son compatibles con una distribucion normal.
+## 9. Curtosis
 
-La asimetria positiva `0.1655` es moderada. La gran diferencia aparece en la curtosis: `10.3085` esta muy por encima del valor `3` de una normal. Por lo tanto, el rechazo se relaciona especialmente con colas pesadas y una mayor presencia de valores extremos.
+### Teoria
 
-No debemos decir que el `p-value` es la probabilidad de que `H0` sea verdadera. El resultado significa que observar una discrepancia como esta seria extremadamente improbable si realmente se cumpliera la normalidad.
+$$K = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{x_i - \bar{x}}{s}\right)^4$$
 
-### Idea para recordar
+La **curtosis en exceso** es:
 
-Si `p < 0.05`, rechazamos normalidad. Siempre hay que complementar esa decision diciendo si el problema parece venir de la asimetria, de la curtosis o de ambas.
+$$K_E = K - 3$$
 
-## 5. Densidad normal y mixtura de normales
+Porque para la normal $K = 3$. Clasificacion:
 
-### Microresumen teorico
+| Valor | Nombre | Colas |
+|---|---|---|
+| $K_E = 0$ | mesocurtica | como la normal |
+| $K_E > 0$ | **leptocurtica** | mas pesadas que la normal |
+| $K_E < 0$ | platicurtica | mas livianas, densidad mas plana |
 
-Una mixtura combina dos o mas distribuciones usando pesos que suman uno. En el ejemplo:
+### Para que sirve
 
-```text
-X ~ 0.75 * N(0, 1) + 0.25 * N(-1.5, 4)
-```
+Casi todas las series financieras son leptocurticas: hay muchos mas dias de
+movimientos extremos de los que predice una normal. Es la razon principal por la
+que el supuesto de normalidad falla.
 
-Esto no significa sumar dos variables aleatorias. Significa que una observacion proviene del primer componente con probabilidad `0.75` y del segundo con probabilidad `0.25`.
-
-La densidad combinada es:
-
-```text
-f_mix(x) = 0.75 * f_1(x) + 0.25 * f_2(x)
-```
-
-### En Python lo hacemos asi
-
-Notebook: `MIA103_2026_Clase_01_02_Mixtura.ipynb`.
+### Codigo generico
 
 ```python
-w1 = 0.75
-w2 = 0.25
+K   = (((ret - ret.mean()) / ret.std())**4).mean()   # curtosis "cruda"
+K_E = K - 3                                          # en exceso
 
-df['pdf_normal'] = stats.norm.pdf(df['z'])
-df['pdf_m15_v4'] = stats.norm.pdf(
-    df['z'], loc=-1.5, scale=2
-)
-df['pdf_mixt'] = (
-    w1 * df['pdf_normal']
-    + w2 * df['pdf_m15_v4']
-)
+# con scipy: OJO con el argumento fisher
+stats.kurtosis(ret, fisher=False)   # devuelve K   (curtosis cruda)
+stats.kurtosis(ret)                 # devuelve K_E (por defecto fisher=True)
 ```
 
-En `scipy`, `scale` recibe el desvio estandar, no la varianza. Como la segunda normal tiene varianza `4`, usamos `scale=2`.
+### Como leer la salida
 
-### Salida del ejemplo de la clase
+**El error mas comun de la materia**: `stats.kurtosis` por defecto
+(`fisher=True`) devuelve la curtosis **en exceso**, no la cruda. Si ves un
+numero como `4.2` es curtosis cruda; si ves `1.2` es en exceso. Un retorno
+diario tipico da $K$ entre 5 y 15.
 
-Para `z = -8`:
+---
 
-```text
-PDF N(0,1):              5.052271e-15
-PDF N(-1.5,4):           1.015000e-03
-PDF de la mixtura:       2.536310e-04
-```
+## 10. Momentos de la normal estandar (Ejercicio 1 de la practica)
 
-### Que significa esta salida
+### Teoria
 
-En un valor muy negativo, la densidad de la normal estandar es practicamente cero. La segunda normal tiene media negativa y mayor dispersion, por lo que asigna mucha mas densidad a esa region. Aunque solo pesa `25%`, domina la cola izquierda de la mixtura.
+Para $Z \sim N(0,1)$:
 
-### Idea para recordar
+$$E(Z) = \int_{-\infty}^{+\infty} z \,\frac{1}{\sqrt{2\pi}} e^{-z^2/2}\,dz = 0$$
+$$Var(Z) = E(Z^2) = 1 \qquad E(Z^3) = 0 \qquad E(Z^4) = 3$$
 
-Un componente con poco peso puede tener un efecto enorme sobre las colas si tiene mayor varianza o una media desplazada.
+### Como se demuestran sin integrar
 
-## 6. Momentos de la mixtura
+El argumento corto es de **paridad**:
 
-### Microresumen teorico
+- $\phi(z) = \frac{1}{\sqrt{2\pi}}e^{-z^2/2}$ es una funcion **par**: $\phi(-z) = \phi(z)$.
+- $z \cdot \phi(z)$ y $z^3 \cdot \phi(z)$ son funciones **impares**, y la integral
+  de una funcion impar sobre $\mathbb{R}$ es 0. De ahi $E(Z)=0$ y $E(Z^3)=0$.
+- $E(Z^2)=1$ es la definicion misma de normal estandar.
+- $E(Z^4)=3$ sale por integracion por partes (o de la funcion generadora de
+  momentos $M_X(t) = e^{\mu t + \sigma^2 t^2/2}$, derivando cuatro veces).
 
-La media de una mixtura es el promedio ponderado de las medias:
+### Consecuencia
 
-```text
-media_mix = w1 * media_1 + w2 * media_2
-```
+Como asimetria y curtosis se calculan sobre la variable **estandarizada**,
+cualquier normal (no solo la estandar) tiene $S = 0$ y $K = 3$. Por eso la
+referencia "3" en la curtosis en exceso.
 
-La varianza no es solamente el promedio ponderado de las varianzas. Tambien debe incorporar la distancia entre la media de cada componente y la media total:
+---
 
-```text
-var_mix = suma de w_i * [var_i + (media_i - media_mix)^2]
-```
+## 11. Test de Jarque-Bera
 
-### En Python lo hacemos asi
+### Teoria
+
+$$JB = \frac{n}{6}\left(S^2 + \frac{K_E^2}{4}\right)$$
+
+Bajo $H_0$ los datos son normales, y entonces $JB \sim \chi^2_2$ asintoticamente.
+
+$$H_0: \text{los datos siguen una distribucion normal}$$
+
+Valores criticos aproximados: **6** al 5% y **9** al 1%.
+
+### Para que sirve
+
+Es un test formal que reemplaza al "me parece que el histograma no es normal".
+Combina las dos desviaciones que importan: asimetria y colas.
+
+### Codigo generico
 
 ```python
-mu_mix = w1 * mu1 + w2 * mu2
+from scipy import stats
 
-var_mix = (
-    w1 * (var1 + (mu1 - mu_mix) ** 2)
-    + w2 * (var2 + (mu2 - mu_mix) ** 2)
-)
+jb_stat, jb_pvalue = stats.jarque_bera(ret)
+
+print(f"JB = {jb_stat:.4f}")
+print(f"p-value = {jb_pvalue:.4f}")
+
+if jb_pvalue < 0.05:
+    print("Rechazamos normalidad al 5%")
+else:
+    print("No rechazamos normalidad al 5%")
 ```
 
-El notebook calcula despues los momentos centrados tercero y cuarto para obtener asimetria y curtosis.
-
-### Salida del ejemplo de la clase
-
-```text
-Media: -0.375
-Varianza: 2.17188
-Tercer momento: -2.84766
-Cuarto momento: 22.89185
-Asimetria: -0.88968
-Curtosis: 4.85301
-```
-
-### Que significa esta salida
-
-- La media negativa surge porque el segundo componente tiene media `-1.5`.
-- La asimetria `-0.88968` indica una cola izquierda mas pronunciada.
-- La curtosis `4.85301` supera el valor `3` de una normal: la mixtura tiene colas mas pesadas.
-- Una normal con la misma media y varianza no reproduce necesariamente la forma ni el riesgo de cola de la mixtura.
-
-### Idea para recordar
-
-Dos distribuciones pueden tener la misma media y varianza y aun asi diferir mucho en asimetria, curtosis y probabilidad de eventos extremos.
-
-## 7. Comparacion de colas
-
-### Microresumen teorico
-
-Para comparar correctamente la mixtura contra una normal conviene usar una normal equivalente con la misma media y varianza. Asi, cualquier diferencia restante corresponde a la forma, la asimetria o las colas, y no simplemente a una ubicacion o escala distinta.
-
-### En Python lo hacemos asi
+Version manual, que es la que reproduce la formula del PDF:
 
 ```python
-pdf_normal_equiv = norm.pdf(
-    df['z'], loc=mu_mix, scale=np.sqrt(var_mix)
-)
+S   = (((ret - ret.mean()) / ret.std())**3).mean()
+K   = (((ret - ret.mean()) / ret.std())**4).mean()
+n   = ret.size
+JB  = n/6 * (S**2 + 0.25 * (K - 3)**2)
 ```
 
-### Salida del ejemplo de la clase
+### Como leer la salida
 
-En `z = -8`:
+- $JB$ **grande** y $p$-value **chico** $\Rightarrow$ se rechaza normalidad.
+- Con retornos diarios de cualquier activo real y varios anios de datos, el
+  $JB$ da en los cientos o miles y el p-value da `0.0000`. **Se rechaza siempre.**
+  Eso no es un error: es el hecho estilizado de que los retornos no son normales.
+- El test es asintotico: con muestras chicas (menos de ~100) no es confiable.
 
-```text
-Densidad de la mixtura:         0.000254
-Densidad de la normal equivalente: 4.163973e-07
-```
+---
 
-### Que significa esta salida
+## 12. QQ plot
 
-La mixtura asigna muchisima mas densidad a un evento extremo de la cola izquierda que la normal equivalente. Esto muestra por que asumir normalidad puede subestimar el riesgo extremo aun cuando la media y la varianza esten correctamente estimadas.
+### Teoria
 
-### Idea para recordar
+Procedimiento del PDF:
 
-La comparacion de colas es central en finanzas: un modelo puede describir bien el centro y, al mismo tiempo, subestimar fuertemente las perdidas extremas.
+1. Ordenar la muestra de menor a mayor y construir la acumulada empirica
+   $\hat{P}_i = i/n$.
+2. Calcular los cuantiles teoricos $\hat{z}_i = \Phi^{-1}(\hat{P}_i)$.
+3. Estandarizar los datos: $z_i = \dfrac{x_i - \bar{x}}{s}$.
+4. Graficar $\hat{z}_i$ contra $z_i$. Si los datos son normales, los puntos caen
+   sobre la recta de 45 grados.
 
-## 8. Practica 1 cruzada con la teoria
+### Para que sirve
 
-Esta seccion explica que pide cada ejercicio, que concepto teorico practica y donde aparece resuelto en Python.
+Es el complemento visual del Jarque-Bera: no solo dice *si* falla la normalidad,
+sino **donde** falla.
 
-### Ejercicio 1 - Momentos de la normal estandar
-
-#### Que hacemos en la practica
-
-Se demuestra mediante integrales que, si `Z ~ N(0,1)`:
-
-```text
-E(Z)   = 0
-E(Z^2) = 1
-E(Z^3) = 0
-E(Z^4) = 3
-```
-
-#### Cruce con la teoria
-
-- `E(Z)=0` confirma que la normal estandar esta centrada en cero.
-- `E(Z^2)=1` confirma que su varianza es uno.
-- `E(Z^3)=0` se relaciona con su simetria y produce un coeficiente de asimetria igual a cero.
-- `E(Z^4)=3` produce una curtosis total igual a tres.
-
-Los momentos impares se anulan porque la densidad es simetrica y la funcion que se integra es impar. Para los momentos pares, la practica utiliza integracion por partes.
-
-#### Que significa el resultado
-
-Estos cuatro valores son la referencia contra la cual despues comparamos distribuciones empiricas y mixturas. Jarque-Bera usa precisamente las desviaciones de la asimetria respecto de `0` y de la curtosis respecto de `3`.
-
-### Ejercicio 2 - Mixtura de normales
-
-#### Que hacemos en la practica
-
-Construimos la densidad:
-
-```text
-0.75 * N(0,1) + 0.25 * N(-1.5,4)
-```
-
-y calculamos su media, varianza, asimetria y curtosis. Este ejercicio se implementa en `MIA103_2026_Clase_01_02_Mixtura.ipynb`.
-
-#### Salida obtenida
-
-```text
-Media: -0.375
-Varianza: 2.17188
-Asimetria: -0.88968
-Curtosis: 4.85301
-```
-
-#### Cruce con la teoria
-
-- La asimetria negativa confirma la cola izquierda alargada que se observa en el grafico.
-- La curtosis mayor que `3` indica una distribucion leptocurtica y con colas mas pesadas que una normal.
-- La practica aclara que los momentos deben calcularse sobre la distribucion, no aplicando estadistica descriptiva a la tabla de valores de la densidad como si fueran una muestra.
-
-#### Que significa el resultado
-
-La mixtura combina dos normales, pero el resultado no es normal. Este es el puente entre la teoria de momentos y el problema empirico de los retornos financieros: una distribucion puede mostrar asimetria y una frecuencia de extremos que la normal no captura.
-
-### Ejercicio 3 - Retornos de un activo financiero
-
-#### Que hacemos en la practica
-
-Elegimos un activo, descargamos entre tres y cinco años de precios ajustados y luego:
-
-1. Calculamos retornos simples.
-2. Calculamos media, volatilidad, asimetria y curtosis.
-3. Graficamos el histograma.
-4. Contrastamos normalidad con Jarque-Bera.
-5. Verificamos la propiedad aditiva de los retornos logaritmicos.
-
-El notebook `MIA103_2026_Clase_01_01.ipynb` desarrolla estos pasos usando el S&P 500, aunque no deja implementados explicitamente el histograma ni la comprobacion mensual del ultimo inciso.
-
-#### En Python completamos el histograma asi
+### Codigo generico
 
 ```python
-plt.hist(retornos, bins=30, edgecolor='black')
-plt.xlabel('Retorno simple diario')
-plt.ylabel('Frecuencia')
-plt.title('Histograma de retornos del S&P 500')
+import scipy.stats as stats
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+z = (ret - ret.mean()) / ret.std()
+
+# opcion 1: scipy
+stats.probplot(z, dist="norm", plot=plt)
+plt.show()
+
+# opcion 2: statsmodels
+sm.qqplot(z, line='s', fit=True)   # line='s' ajusta una recta a los datos
 plt.show()
 ```
 
-#### En Python verificamos la suma logaritmica asi
+### Como leer la salida
+
+| Forma del grafico | Interpretacion |
+|---|---|
+| Puntos sobre la recta | normalidad razonable |
+| Extremos **por debajo** a la izquierda y **por encima** a la derecha (forma de S invertida) | colas pesadas, leptocurtica: el caso tipico de retornos |
+| Solo la cola izquierda se despega | asimetria negativa |
+| Puntos formando una S "hacia adentro" | colas livianas, platicurtica (ej: uniforme) |
+
+Pregunta del PDF: la **t-Student** (simetrica, colas pesadas) da la S invertida
+en ambos extremos; la **uniforme** (simetrica, colas livianas) da la S contraria.
+
+---
+
+# Parte D - Mixtura de normales (Ejercicio 2)
+
+## 13. Que es una mixtura
+
+### Teoria
+
+Una mixtura combina dos densidades normales con pesos que suman 1:
+
+$$f_X(x) = w_1 \cdot \frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}} \;+\; w_2 \cdot \frac{1}{\sqrt{8\pi}}e^{-\frac{(x+1.5)^2}{8}}$$
+
+con $w_1 = 0.75$ para $N(0,1)$ y $w_2 = 0.25$ para $N(-1.5,\,4)$.
+
+**No es la suma de dos variables normales.** Es como si con probabilidad 0.75
+sorteamos de la primera normal y con 0.25 de la segunda. El resultado **no es
+normal**.
+
+### Para que sirve
+
+Es el modelo mas simple que genera asimetria y colas pesadas partiendo de
+normales. Sirve para representar "regimenes": un regimen tranquilo frecuente y
+uno turbulento poco frecuente.
+
+### Codigo generico
 
 ```python
-mes = df[df['Date'].dt.to_period('M') == '2025-01']
+import numpy as np, pandas as pd
+import scipy.stats as stats
 
-suma_diaria = mes['Return_log'].sum()
-retorno_mes = np.log(
-    mes['Adj Close'].iloc[-1] / mes['Adj Close'].iloc[0]
-)
+w1, mu1, var1 = 0.75, 0.0, 1.0
+w2, mu2, var2 = 0.25, -1.5, 4.0
 
-print(suma_diaria)
-print(retorno_mes)
+z = np.arange(-8, 8.05, 0.1)
+df = pd.DataFrame({"z": z})
+
+df["pdf_1"]    = stats.norm.pdf(df["z"], loc=mu1, scale=np.sqrt(var1))
+df["pdf_2"]    = stats.norm.pdf(df["z"], loc=mu2, scale=np.sqrt(var2))
+df["pdf_mixt"] = w1 * df["pdf_1"] + w2 * df["pdf_2"]
 ```
 
-La igualdad se debe a que:
+### Como leer la salida
+
+**Trampa central del ejercicio**: `scipy` pide `scale` = **desvio estandar**, no
+varianza. Para $N(-1.5, 4)$ hay que pasar `scale=2`, no `scale=4`. Es el error
+mas frecuente en este ejercicio.
+
+---
+
+## 14. Momentos de la mixtura
+
+### Teoria
+
+No se pueden promediar las asimetrias ni las curtosis. Hay que ir por los
+momentos centrados. Con $\mu_{mix} = w_1\mu_1 + w_2\mu_2$:
+
+$$\sigma^2_{mix} = \sum_i w_i\left[\sigma_i^2 + (\mu_i - \mu_{mix})^2\right]$$
+
+$$\mu_3 = \sum_i w_i\left[(\mu_i - \mu_{mix})^3 + 3(\mu_i - \mu_{mix})\sigma_i^2\right]$$
+
+$$\mu_4 = \sum_i w_i\left[(\mu_i - \mu_{mix})^4 + 6(\mu_i - \mu_{mix})^2\sigma_i^2 + 3\sigma_i^4\right]$$
+
+Y finalmente:
+
+$$S = \frac{\mu_3}{\sigma_{mix}^3} \qquad\qquad K = \frac{\mu_4}{\sigma_{mix}^4}$$
+
+### Codigo generico
+
+```python
+mu_mix  = w1*mu1 + w2*mu2
+var_mix = w1*(var1 + (mu1-mu_mix)**2) + w2*(var2 + (mu2-mu_mix)**2)
+std_mix = np.sqrt(var_mix)
+
+mu_3 = (w1*((mu1-mu_mix)**3 + 3*(mu1-mu_mix)*var1)
+      + w2*((mu2-mu_mix)**3 + 3*(mu2-mu_mix)*var2))
+
+mu_4 = (w1*((mu1-mu_mix)**4 + 6*(mu1-mu_mix)**2*var1 + 3*var1**2)
+      + w2*((mu2-mu_mix)**4 + 6*(mu2-mu_mix)**2*var2 + 3*var2**2))
+
+skewness = mu_3 / std_mix**3
+kurtosis = mu_4 / var_mix**2
+```
+
+### Salida para este ejercicio
 
 ```text
-ln(P_1/P_0) + ln(P_2/P_1) + ... + ln(P_T/P_{T-1})
-= ln(P_T/P_0)
+media      = -0.3750
+varianza   =  2.1719      desvio = 1.4737
+mu_3       = -2.8477
+mu_4       = 22.8918
+asimetria  = -0.8897
+curtosis   =  4.8530      en exceso = 1.8530
 ```
 
-Los cocientes intermedios se cancelan al sumar los logaritmos.
+### Como leer la salida
 
-#### Salida e interpretacion de Jarque-Bera
+- **Asimetria $-0.89$**: negativa, como se ve en el grafico. Tiene sentido: la
+  segunda componente esta corrida a la izquierda ($\mu_2 = -1.5$), asi que
+  engorda la cola izquierda.
+- **Curtosis $4.85 > 3$**: leptocurtica. Mezclar dos normales con varianzas
+  distintas (1 y 4) genera colas mas pesadas que cualquiera de las dos.
 
-En la solucion oficial aparece un ejemplo con:
+Conclusion del ejercicio: **la mixtura es asimetrica negativa y leptocurtica**,
+aunque este construida enteramente con normales.
+
+---
+
+## 15. Comparar la mixtura contra su normal equivalente
+
+### Por que
+
+Comparar la mixtura contra una $N(0,1)$ no dice nada: tienen media y varianza
+distintas, asi que la diferencia visual mezcla ubicacion, escala y forma. La
+comparacion correcta es contra la normal que tiene **exactamente la misma media
+y varianza** que la mixtura: asi lo unico que queda a la vista es la forma.
+
+### Codigo generico
+
+```python
+from scipy.stats import norm
+
+df["pdf_normal_equiv"] = norm.pdf(df["z"], loc=mu_mix, scale=std_mix)
+
+plt.plot(df["z"], df["pdf_mixt"], label="Mixture", color="green")
+plt.plot(df["z"], df["pdf_normal_equiv"], "--", color="black",
+         label=f"Normal equivalente N({mu_mix:.3f}, {var_mix:.3f})")
+plt.legend(); plt.show()
+```
+
+### Inspeccion de colas
+
+En el grafico las colas parecen ambas cero. La unica forma de ver que pasa es
+mirar los numeros:
+
+```python
+cola_izq = df[(df["z"] >= -8) & (df["z"] <= -7.1)]
+print(cola_izq[["z", "pdf_mixt", "pdf_normal_equiv"]])
+```
+
+### Como leer la salida
+
+En la cola izquierda la densidad de la mixtura es **varios ordenes de magnitud
+mayor** que la de la normal equivalente. Eso es exactamente lo que significa
+"colas pesadas": eventos extremos mucho mas probables de lo que dice la normal.
+
+Es la leccion practica de toda la clase: **dos distribuciones con identica media
+y varianza pueden tener riesgo de cola completamente distinto.**
+
+---
+
+# Parte E - Resolucion de la Ejercitacion 1
+
+## 16. Guion completo
+
+### Ejercicio 1 - momentos de la normal estandar
+
+Teorico. Ver punto 10: argumento de paridad para $E(Z)$ y $E(Z^3)$; definicion
+para $E(Z^2)$; integracion por partes o mgf para $E(Z^4)=3$.
+
+### Ejercicio 2 - mixtura
+
+Ver puntos 13 a 15. Respuesta: asimetrica **negativa** ($S=-0.89$) y leptocurtica
+($K=4.85$). Los coeficientes se calculan con los momentos centrados de la
+mixtura, no promediando los de cada componente.
+
+### Ejercicio 3 - activo real
+
+```python
+import yfinance as yf, numpy as np, pandas as pd
+from scipy import stats
+import matplotlib.pyplot as plt
+
+# (0) datos: 3 a 5 anios
+data = yf.download("MELI", period="5y", interval="1d", auto_adjust=True)
+
+px = pd.DataFrame()
+px["Close"] = data["Close"]["MELI"]      # yfinance devuelve MultiIndex
+
+# (a) retornos simples
+px["ret"] = px["Close"].pct_change()
+ret = px["ret"].dropna()
+
+# (b) media, volatilidad, asimetria, curtosis
+print("media     ", ret.mean())
+print("volatilidad", ret.std())
+print("asimetria ", stats.skew(ret))
+print("curtosis  ", stats.kurtosis(ret, fisher=False))   # cruda
+
+# (c) histograma
+plt.hist(ret, bins=50, edgecolor="black", alpha=0.7)
+plt.title("Histograma de retornos"); plt.show()
+
+# (d) Jarque-Bera
+jb, p = stats.jarque_bera(ret)
+print("JB:", jb, "p-value:", p)
+print("Rechazamos normalidad al 5%" if p < 0.05 else "No rechazamos")
+
+# (e) log-retornos y verificacion de aditividad
+px["ret_log"] = np.log(px["Close"] / px["Close"].shift(1))
+
+mes = "2025-06"
+suma = px.loc[mes, "ret_log"].sum()
+
+pos = px.index.get_loc(px.loc[mes].index[0])
+directo = np.log(px.loc[mes, "Close"].iloc[-1] / px["Close"].iloc[pos - 1])
+
+print(suma, directo)     # iguales
+```
+
+### Como redactar la conclusion del punto (d)
 
 ```text
-JB = 1982.8
+El estadistico de Jarque-Bera es JB = [valor], con p-value = 0.0000.
+Como el p-value es menor que 0.05, rechazo la hipotesis nula de normalidad
+al 5% de significancia.
+
+El rechazo se explica por los dos componentes del estadistico: la curtosis
+cruda es [valor] > 3, es decir colas mas pesadas que la normal, y la asimetria
+es [valor], lo que indica [simetria aproximada / cola izquierda pesada].
+
+Esto es consistente con lo que muestra el QQ plot, donde los puntos de ambos
+extremos se despegan de la recta de 45 grados.
 ```
 
-El notebook actualizado obtiene:
+---
 
-```text
-JB = 2656.0862
-p-value = 0.0000
-```
+## 17. Errores frecuentes
 
-Los valores difieren porque usan muestras o fechas distintas. La conclusion teorica es la misma: rechazamos normalidad. Esto muestra que el resultado numerico depende de la muestra, mientras que la regla de decision no cambia.
+| Error | Por que pasa | Como se evita |
+|---|---|---|
+| `scale=4` para $N(-1.5,4)$ | `scipy` pide desvio, no varianza | `scale=np.sqrt(4)` = 2 |
+| Confundir curtosis cruda con en exceso | `fisher=True` es el default | `stats.kurtosis(x, fisher=False)` para la cruda |
+| $130 \times (1-0.10)$ en el Ejercicio 1 | tratar un log-retorno como simple | $130 \cdot e^{-0.10}$ |
+| Promediar asimetrias de la mixtura | no es lineal | usar momentos centrados $\mu_3$, $\mu_4$ |
+| Primera fila `NaN` rompe el calculo | `pct_change()` la genera | `.dropna()` antes de estadisticos |
+| Retornos con saltos raros | falta ajustar por splits | `auto_adjust=True` |
+| Comparar mixtura contra $N(0,1)$ | mezcla ubicacion, escala y forma | comparar contra la normal equivalente |
+| Calcular retornos sin ordenar | el DataFrame venia desordenado | `df.sort_values('Date')` primero |
 
-#### Precaucion con los precios
+---
 
-La practica destaca que deben usarse precios ajustados por dividendos, cupones o pagos de capital. De lo contrario, una transferencia al tenedor podria interpretarse erroneamente como una perdida de precio y generar un retorno falso.
+## 18. Checklist de Clase 1
 
-## Cierre de la Clase 1
+Al terminar deberias poder:
 
-Al terminar esta clase deberiamos poder explicar:
+1. Escribir y distinguir retorno simple, bruto y logaritmico.
+2. Explicar de donde sale $\ln(1+R) \approx R$ (Taylor en $x_0=1$).
+3. Decir cuando la aproximacion es mala y por que importa para el riesgo.
+4. Demostrar que los log-retornos se suman en el tiempo.
+5. Resolver los ejercicios 1 y 2 del PDF sin dudar del signo.
+6. Calcular media y volatilidad y saber que divisor usa cada libreria.
+7. Estandarizar una variable y justificar por que con $E(a+bX)$ y $Var(a+bX)$.
+8. Calcular el retorno minimo al $cl\%$ de confianza bajo normalidad.
+9. Definir e interpretar asimetria.
+10. Definir curtosis, curtosis en exceso, y las tres categorias.
+11. Justificar por que la normal tiene $S=0$ y $K=3$.
+12. Plantear el Jarque-Bera, su $H_0$, su distribucion y sus criticos.
+13. Construir e interpretar un QQ plot, incluida la forma de S invertida.
+14. Construir una mixtura de normales y calcular sus cuatro momentos.
+15. Explicar por que una mixtura de normales no es normal.
+16. Explicar por que dos distribuciones con igual media y varianza pueden tener
+    riesgo de cola muy distinto.
 
-1. La diferencia entre precio, retorno simple y retorno logaritmico.
-2. Que informacion aportan media, desvio, asimetria y curtosis.
-3. Como leer un QQ plot.
-4. Como tomar una decision con el `p-value` de Jarque-Bera.
-5. Que representa una mixtura de distribuciones.
-6. Por que una mixtura puede generar asimetria y colas pesadas.
-7. Por que igualar media y varianza no alcanza para igualar riesgos extremos.
+---
 
-## Observacion tecnica antes de ejecutar
+## 19. Notas tecnicas
 
-El notebook intenta leer `SP500.xlsx`, mientras que la base local se llama `SP500_.xlsx`. Tambien ofrece descargar los datos con `yfinance`. Si se utiliza Yahoo Finance en otra fecha, la cantidad de observaciones y las salidas numericas pueden diferir de las guardadas en el notebook.
+- Dependencias: `pandas`, `numpy`, `matplotlib`, `scipy`, `statsmodels`,
+  `yfinance` y `openpyxl` (para `read_excel`).
+- El notebook `01_01` lee `SP500.xlsx` sin ruta; el archivo del repo esta en
+  `Bases de Datos MIA103/SP500_.xlsx` (con guion bajo). Hay que ajustar el nombre
+  y la ruta.
+- `yfinance` puede devolver columnas MultiIndex segun la version: si
+  `df["Close"]` falla, probar `df["Close"][ticker]`.
+- Los numeros que salen de Yahoo Finance cambian con la fecha de descarga. Las
+  **interpretaciones** no cambian; los valores puntuales si.
+- El notebook `Clase_00_Intro_practica.ipynb` es repaso de herramientas:
+  `np.array`, `np.arange`, `np.linspace`, `np.random.normal`, `pd.DataFrame`,
+  `plt.plot`, `plt.hist`, `to_csv` / `read_csv`. No tiene teoria propia.

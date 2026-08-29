@@ -1,501 +1,713 @@
-# Clase 2 - Teoria + practica + Python
+# Clase 2 - PBI, crecimiento, tendencia y ciclo
 
-[← Volver al indice general](../Res+Pra.md)
+[Volver al indice general](../Res+Pra.md)
 
-Esta guia cruza la teoria de la Clase 2 con los notebooks, la Ejercitacion 2, el Excel de la clase y las salidas obtenidas.
+Mapa completo de la Clase 2: teoria del PDF, codigo de los notebooks y
+Ejercitacion 2. Cada tema sigue el mismo recorrido:
 
-El recorrido de cada tema es:
+$$\text{teoria} \;\rightarrow\; \text{para que sirve} \;\rightarrow\; \text{codigo generico} \;\rightarrow\; \text{como leer la salida}$$
 
-```text
-microteoria -> en Python lo hacemos asi -> salida del ejemplo -> que significa -> idea para recordar
-```
-
-## Archivos que vamos a usar
+## Archivos de esta clase
 
 | Tipo | Archivo | Para que se usa |
 |---|---|---|
-| Teoria | `Clases/MIA103_Clase_2.pdf` | PBI real, crecimiento, logaritmos, tendencia y ciclo |
-| Python | `Codigos/MIA103_2026_Clase_02_PBI_Argentina.ipynb` | PBI argentino, crecimiento, media movil y filtro HP |
-| Python | `Codigos/MIA103_2026_Clase_02_Ejercicio_3.ipynb` | Aplicacion de media movil y HP al PBI de Estados Unidos |
-| Python | `Codigos/MIA103_2026_Clase_02_Ejercicios_1_y_2.ipynb` | Mixturas, momentos, simulacion y QQ plots de la practica |
-| Practica | `Practicas/MIA103_Ejer_2.pdf` | Dos ejercicios de mixturas y uno de tendencia-ciclo |
-| Datos | `Excels/MIA103_Clase_2.xlsx` | PBI real de Argentina y Estados Unidos, media movil y HP |
+| Teoria | `Clases/MIA103_Clase_2.pdf` | PBI, tasas de crecimiento, tendencia y ciclo |
+| Python | `Codigos/MIA103_2026_Clase_02_PBI_Argentina.ipynb` | PBI Argentina: log, media movil, filtro HP |
+| Python | `Codigos/MIA103_2026_Clase_02_Ejercicios_1_y_2.ipynb` | Mixturas de la practica + bootstrap + QQ plot |
+| Python | `Codigos/MIA103_2026_Clase_02_Ejercicio_3.ipynb` | PBI de EEUU: media movil y HP |
+| Practica | `Practicas/MIA103_Ejer_2.pdf` | Ejercicios 1, 2 y 3 |
+| Resuelta | `Practicas_Resueltas/Respuestas_2.ipynb` | Resolucion propia |
+| Datos | `Excels/MIA103_Clase_2.xlsx` | Hojas `PBI Real Arg`, `Med Mov`, `HP`, `PBI Real USA` |
 
-## Que notebook usamos para cada tema
+## Mapa tema - PDF - notebook - practica
 
-| Paso | Tema | Notebook o archivo |
-|---:|---|---|
-| 1 | PBI nominal y PBI real | PDF de Clase 2 |
-| 2 | Crecimiento simple, acumulado y promedio | PDF y notebook `PBI_Argentina` |
-| 3 | Escala logaritmica | Notebook `PBI_Argentina` |
-| 4 | Tendencia y ciclo | PDF y notebook `PBI_Argentina` |
-| 5 | Media movil centrada | Notebooks `PBI_Argentina` y `Ejercicio_3` |
-| 6 | Filtro Hodrick-Prescott | Notebooks `PBI_Argentina` y `Ejercicio_3` |
-| 7 | Mixtura simetrica y leptocurtica | Notebook `Ejercicios_1_y_2`, ejercicio 1 |
-| 8 | Mixtura asimetrica y platicurtica | Notebook `Ejercicios_1_y_2`, ejercicio 2 |
-| 9 | Descomposicion del PBI de Estados Unidos | Notebook `Ejercicio_3`, ejercicio 3 de la practica |
+| # | Tema | PDF | Notebook | Practica |
+|---:|---|---|---|---|
+| 1 | PBI nominal vs real | p. 1-2 | - | - |
+| 2 | Tasa de crecimiento y acumulada | p. 3-4 | `PBI_Argentina` celda 7 | - |
+| 3 | Tasa promedio anual (radicacion) | p. 5 | `PBI_Argentina` celda 7 | - |
+| 4 | Escala logaritmica | p. 5-6 | `PBI_Argentina` celda 9 | - |
+| 5 | Descomposicion $y_t = y_t^g + y_t^c$ | p. 7 | - | Ej. 3 |
+| 6 | Tendencia deterministica | p. 8 | (se ve en Clase 3) | - |
+| 7 | Medias moviles centradas | p. 9-10 | `PBI_Argentina` celdas 11-15 | Ej. 3 |
+| 8 | Filtro Hodrick-Prescott | p. 10-12 | `PBI_Argentina` celdas 17-21 | Ej. 3 |
+| 9 | Mixturas (repaso de Clase 1) | - | `Ejercicios_1_y_2` | Ej. 1 y 2 |
+| 10 | Bootstrap y QQ plot | - | `Ejercicios_1_y_2` celdas 9-10 | Ej. 1e, 2j |
 
-## 1. PBI nominal y PBI real
+---
 
-### Microresumen teorico
+# Parte A - PBI y tasas de crecimiento
 
-El PBI mide el valor de los bienes finales producidos en una economia durante un periodo.
+## 1. PBI nominal vs PBI real
 
-El PBI nominal usa los precios del mismo periodo:
+### Teoria
 
-```text
-PBI nominal_t = suma de P_i,t * Q_i,t
-```
+$$PBI\ Nominal_t = \sum_i P_i^t \, Q_i^t \qquad\qquad PBI\ Real_t = \sum_i P_i^0 \, Q_i^t$$
 
-Puede aumentar porque suben las cantidades, porque suben los precios o por ambas razones.
+La unica diferencia es el precio con que se valua: el nominal usa los precios
+**del periodo $t$**, el real usa los precios de un **anio base** fijo (el "Anio 0").
 
-El PBI real usa precios de un año base:
+### Para que sirve
 
-```text
-PBI real_t = suma de P_i,0 * Q_i,t
-```
+El nominal sube si suben los precios **o** si suben las cantidades: mezcla
+inflacion con crecimiento. El real solo sube si suben las **cantidades**.
 
-Al mantener fijos los precios, busca medir cambios en las cantidades producidas. Por eso usamos PBI real para hablar de crecimiento o recesion.
+Por eso en economia se trabaja con el PBI real: decimos que la economia **crece**
+cuando el PBI real crece y que esta en **recesion** cuando cae.
 
-### En Python lo hacemos asi
+### Idea para recordar
 
-El Excel nuevo contiene una hoja llamada `PBI Real Arg`. Para cargar las columnas de año y PBI desde la raiz del repositorio:
+Real = cantidades a precios constantes. Es la unica medida que aisla produccion
+de inflacion.
+
+---
+
+## 2. Tasa de crecimiento y tasa acumulada
+
+### Teoria
+
+Tasa de un periodo al siguiente:
+
+$$g_t = \frac{PBI_t - PBI_{t-1}}{PBI_{t-1}} = \frac{PBI_t}{PBI_{t-1}} - 1
+\qquad\Longrightarrow\qquad 1 + g_t = \frac{PBI_t}{PBI_{t-1}}$$
+
+Tasa acumulada entre dos anios cualesquiera:
+
+$$1 + g_{acum} = \frac{PBI_{98}}{PBI_{63}}$$
+
+### Ejemplo del PDF
+
+$$1 + g_{acum} = \frac{705822}{270609} = 2.6085 \;\Longrightarrow\; g_{acum} = 1.6085$$
+
+Se lee: **entre 1963 y 1998 el PBI real de Argentina crecio 160.85%** en total
+(35 anios acumulados).
+
+### Codigo generico
 
 ```python
-import pandas as pd
-
-df = pd.read_excel(
-    'Excels/MIA103_Clase_2.xlsx',
-    sheet_name='PBI Real Arg',
-    usecols='B:C',
-    skiprows=10
-)
-df.columns = ['year', 'gdp']
-df = df.dropna().sort_values('year').reset_index(drop=True)
+df["g"] = df["gdp"].pct_change()                     # tasa periodo a periodo
+g_acum  = df["gdp"].iloc[-1] / df["gdp"].iloc[0] - 1 # acumulada de toda la serie
 ```
 
-### Salida del ejemplo
+### Como leer la salida
 
-```text
-year        gdp
-1950  196688.453125
-1951  208305.203125
-1952  195898.250000
-1953  204164.875000
-```
+`g_acum = 1.6085` **no** es "creció 1.6%": es 160.85%. Es un error de lectura
+frecuente cuando el crecimiento acumulado supera el 100%.
 
-### Que significa esta salida
+---
 
-Cada valor representa produccion real valuada a precios constantes. La caida entre 1951 y 1952 refleja una disminucion real de la actividad, no simplemente un cambio de precios.
+## 3. Tasa de crecimiento promedio anual
 
-### Idea para recordar
+### Teoria
 
-El PBI nominal mezcla cantidades y precios. El PBI real intenta aislar cantidades y es el relevante para medir actividad economica.
+La relacion entre la tasa acumulada en $n$ periodos y la tasa de cada periodo es
+**multiplicativa**, no aditiva:
 
-## 2. Tasas de crecimiento
+$$1 + g_{acum} = (1 + g)^n$$
 
-### Microresumen teorico
+Despejando con radicacion:
 
-El crecimiento simple entre dos periodos es:
+$$g = (1 + g_{acum})^{1/n} - 1$$
 
-```text
-g_t = PBI_t / PBI_{t-1} - 1
-```
+### Ejemplo del PDF
 
-El crecimiento acumulado entre el inicio y el final es:
+$$2.6085 = (1+g)^{35} \;\Longrightarrow\; 1 + g = 2.6085^{1/35} = 1.0277$$
 
-```text
-1 + g_acumulado = PBI_final / PBI_inicial
-```
+La tasa de crecimiento promedio anual entre 1963 y 1998 fue **2.77%**.
 
-Si queremos una tasa anual constante equivalente para `n` años:
+### Para que sirve
 
-```text
-1 + g_promedio = (PBI_final / PBI_inicial)^(1/n)
-```
+Responde: "si la economia hubiera crecido siempre al mismo ritmo, a que tasa
+tendria que haber crecido para acumular ese total". Es la tasa geometrica, no el
+promedio simple de las tasas anuales.
 
-La tasa logaritmica promedio es:
-
-```text
-g_log = [ln(PBI_final) - ln(PBI_inicial)] / n
-```
-
-Para tasas pequeñas, `g_log` aproxima la tasa porcentual anual.
-
-### En Python lo hacemos asi
+### Codigo generico
 
 ```python
-primero = df.iloc[0]
-ultimo = df.iloc[-1]
-n = ultimo['year'] - primero['year']
+n = df["year"].iloc[-1] - df["year"].iloc[0]
 
-crecimiento_log_promedio = (
-    np.log(ultimo['gdp'] / primero['gdp']) / n
-)
+# version exacta (radicacion)
+g = (df["gdp"].iloc[-1] / df["gdp"].iloc[0])**(1/n) - 1
+
+# version logaritmica (la del notebook)
+g_log = (1/n) * np.log(df["gdp"].iloc[-1] / df["gdp"].iloc[0])
 ```
 
-### Salida del ejemplo
+### Como leer la salida
 
-El notebook original, con su archivo CSV 1950-2023, guarda:
+Las dos dan casi lo mismo, porque $\ln(1+g) \approx g$ (Taylor, Clase 1):
 
 ```text
-0.022374
+exacta:      2.7770 %
+logaritmica: 2.7391 %
 ```
 
-Esto equivale aproximadamente a un crecimiento logaritmico promedio anual de `2.2374%`.
+La logaritmica siempre da un poco **menos**. Con tasas chicas la diferencia es
+irrelevante; con tasas grandes hay que usar la exacta.
 
-Con el Excel nuevo, que contiene Argentina entre 1950 y 2019, obtenemos aproximadamente:
+**Nunca promediar las tasas anuales sumandolas y dividiendo por $n$**: eso da un
+promedio aritmetico que sobreestima el crecimiento real.
 
-```text
-0.023209
-```
+---
 
-es decir, `2.3209%` anual en terminos logaritmicos.
+## 4. Escala logaritmica
 
-### Que significa esta salida
+### Teoria
 
-Las dos tasas no son contradictorias: usan periodos y versiones de datos diferentes. Una tasa promedio resume todo el intervalo con una unica pendiente; no significa que el PBI haya crecido exactamente a esa tasa todos los años.
+Graficar $\ln(PBI_t)$ en vez de $PBI_t$. La ventaja es que la **pendiente del
+grafico es directamente la tasa de crecimiento**:
 
-### Ejemplo teorico de la clase
+$$\frac{\ln PBI_{98} - \ln PBI_{63}}{98 - 63} = \frac{1}{35}\ln\!\left(\frac{PBI_{98}}{PBI_{63}}\right) = \ln\!\left(\frac{PBI_{98}}{PBI_{63}}\right)^{1/35}$$
 
-Entre 1963 y 1998, el PDF utiliza aproximadamente:
+Y lo de adentro del logaritmo es $(1+g_{acum})^{1/n} = 1+g$, asi que la pendiente
+es $\ln(1+g) \approx g$.
 
-```text
-PBI_1963 = 270609
-PBI_1998 = 705822
-```
+### Para que sirve
 
-El cociente es `2.6085`: el PBI final equivale a 2.6085 veces el inicial. El crecimiento acumulado es entonces `160.85%`, mientras que la tasa anual constante equivalente es aproximadamente `2.77%`.
+Tres cosas que en escala normal no se ven:
 
-### Idea para recordar
+1. Una serie que crece a tasa constante se ve como una **recta**. En escala normal
+   se ve como una exponencial.
+2. Se pueden comparar visualmente periodos con niveles muy distintos: la misma
+   pendiente significa la misma tasa, aunque el nivel sea 10 veces mayor.
+3. Habilita la descomposicion tendencia-ciclo aditiva del punto 5.
 
-No hay que confundir crecimiento acumulado con crecimiento promedio anual. Uno describe todo el periodo; el otro construye una tasa anual equivalente.
-
-## 3. Escala logaritmica
-
-### Microresumen teorico
-
-Aplicar logaritmos comprime la escala y transforma cocientes en diferencias:
-
-```text
-ln(PBI_t / PBI_{t-1}) = ln(PBI_t) - ln(PBI_{t-1})
-```
-
-Esto facilita leer el crecimiento: en un grafico de `ln(PBI)`, la pendiente aproxima la tasa de crecimiento.
-
-### En Python lo hacemos asi
+### Codigo generico
 
 ```python
-df['log_pbi'] = np.log(df['gdp'])
+df["log_pbi"] = np.log(df["gdp"])
+
+plt.plot(df["year"], df["log_pbi"])
 ```
 
-### Salida del ejemplo
+### Como leer la salida
 
-```text
-year        gdp       log_pbi
-1950  196688.453125  12.189376
-1951  208305.203125  12.246760
-1952  195898.250000  12.185351
-```
+En el grafico del PDF, el $\ln$ del PBI argentino va de $12.51$ (1950) a $13.47$
+(2019). La diferencia $13.47 - 12.51 = 0.96$ es el crecimiento logaritmico
+acumulado en 69 anios: aproximadamente $e^{0.96} = 2.6$, o sea el PBI se
+multiplico por 2.6.
 
-### Que significa esta salida
+Tramos con **pendiente mas empinada** = periodos de crecimiento mas rapido.
+Tramos planos u horizontales = estancamiento.
 
-Entre 1950 y 1951, la diferencia logaritmica es positiva; entre 1951 y 1952 es negativa. La transformacion cambia la escala, pero no cambia el orden temporal ni convierte una caida en crecimiento.
+---
 
-### Idea para recordar
+# Parte B - Descomponer tendencia y ciclo
 
-Una diferencia de logaritmos se interpreta aproximadamente como una variacion porcentual cuando el cambio es pequeño.
+## 5. La descomposicion
 
-## 4. Tendencia y ciclo
+### Teoria
 
-### Microresumen teorico
+Trabajando sobre la serie en logaritmos, que llamamos $y_t$:
 
-La clase propone descomponer el logaritmo del PBI en:
+$$y_t = y_t^g + y_t^c$$
 
-```text
-y_t = y_t^g + y_t^c
-```
+- $y_t^g$: componente **tendencial** (el PBI potencial o de largo plazo).
+- $y_t^c$: componente **ciclico** (los desvios de corto plazo).
 
-donde:
+### Para que sirve
 
-- `y_t` es el logaritmo del PBI observado.
-- `y_t^g` es la tendencia o componente de largo plazo.
-- `y_t^c` es el ciclo o desvio respecto de la tendencia.
+Separa dos preguntas distintas:
 
-Si `y_t^c > 0`, la actividad esta por encima de la tendencia estimada. Si `y_t^c < 0`, esta por debajo. Esto no equivale automaticamente a la definicion tecnica de recesion basada en tasas de crecimiento consecutivas.
+- "cuanto puede producir esta economia en el largo plazo" (tendencia, depende de
+  capital, trabajo, tecnologia);
+- "estamos por encima o por debajo de ese potencial ahora" (ciclo).
 
-### Tres metodos planteados
+Cuando $y_t^c > 0$ la economia esta en **auge**; cuando $y_t^c < 0$, en
+**recesion**.
 
-1. Tendencia deterministica: ajustar una recta. Se desarrollara con regresion en clases posteriores.
-2. Media movil centrada: promediar observaciones cercanas.
-3. Filtro Hodrick-Prescott: elegir una tendencia suave mediante optimizacion.
+### Por que en logaritmos
 
-### Idea para recordar
+Porque en logaritmos la descomposicion es **aditiva** y el ciclo se lee
+directamente como desvio porcentual. Un $y_t^c = -0.05$ significa "el PBI esta 5%
+por debajo de su tendencia".
 
-Tendencia y ciclo no se observan directamente: dependen del metodo utilizado para estimarlos.
+### Las tres formas de hacerlo
 
-## 5. Media movil centrada
+| Metodo | Idea | Donde se ve |
+|---|---|---|
+| Tendencia deterministica | ajustar una recta a $y_t$ | PDF p. 8, se resuelve en Clase 3 con regresion |
+| Medias moviles | promediar ventanas centradas | punto 6 |
+| Filtro Hodrick-Prescott | problema de optimizacion | punto 7 |
 
-### Microresumen teorico
+---
 
-Con una ventana de `2n+1`, la tendencia en `t` es:
+## 6. Medias moviles centradas
 
-```text
-y_t^g = promedio(y_{t-n}, ..., y_t, ..., y_{t+n})
-```
+### Teoria
 
-La clase utiliza `n=5`, es decir, once años: cinco anteriores, el contemporaneo y cinco posteriores.
+La tendencia es el promedio de $y_t$ en una ventana **simetrica** de ancho
+$2n+1$: $n$ hacia atras, $n$ hacia adelante, mas la contemporanea.
 
-El ciclo se calcula como:
+$$y_t^g = \frac{1}{2n+1}\sum_{j=-n}^{n} y_{t+j}$$
 
-```text
-y_t^c = y_t - y_t^g
-```
+Y el ciclo por diferencia:
 
-### En Python lo hacemos asi
+$$y_t^c = y_t - y_t^g$$
+
+### Para que sirve
+
+La logica es: si un ciclo completo (auge + recesion) dura aproximadamente esa
+cantidad de anios, al promediar la ventana los positivos del auge cancelan los
+negativos de la recesion y lo que queda es la tendencia.
+
+### Eleccion de $n$
+
+$n$ es el **parametro de suavizado**. El valor tipico con datos anuales es
+$n = 5$, o sea una ventana de 11 anios, porque uno espera que un ciclo economico
+completo entre en esa ventana.
+
+- $n$ mas grande $\rightarrow$ tendencia mas suave, pero se pierde mas informacion
+  en las puntas.
+- Por eso **no conviene tomar $n$ grande respecto de $T$** (total de
+  observaciones).
+
+### Codigo generico
 
 ```python
-df['ygmm'] = df['log_pbi'].rolling(
-    window=11,
-    center=True
-).mean()
-
-df['ciclo_mm'] = df['log_pbi'] - df['ygmm']
+df["ygmm"]  = df["log_pbi"].rolling(window=11, center=True).mean()
+df["ciclo"] = df["log_pbi"] - df["ygmm"]
 ```
 
-### Salida del ejemplo argentino
+`window=11` es $2n+1$ con $n=5$. **`center=True` es imprescindible**: sin eso
+pandas alinea la ventana hacia atras y la "tendencia" queda desfasada 5 anios.
+
+### Como leer la salida
+
+**Los primeros y ultimos $n$ valores son `NaN`.** Con ventana 11 son 5 al inicio
+y 5 al final:
 
 ```text
-Año    log(PBI)   Tendencia MM11   Ciclo
-1963   12.508431      12.576386   -0.067954
-1998   13.467203      13.362985    0.104218
-2002   13.264402      13.453190   -0.188788
+NaN en ygmm: 10 en total (5 al inicio + 5 al final)
 ```
 
-### Que significa esta salida
+Es la limitacion estructural del metodo: no se puede calcular un promedio
+centrado sin datos a ambos lados. Justamente por eso no se recomienda una ventana
+muy ancha.
 
-- En 1963 el PBI estaba aproximadamente `6.8%` logaritmico por debajo de la tendencia movil.
-- En 1998 estaba por encima de la tendencia.
-- En 2002 aparece una brecha negativa muy marcada, consistente con la crisis argentina.
+Graficar el ciclo con una linea horizontal en cero ayuda a leerlo:
 
-### Limitacion de los extremos
-
-Con una ventana centrada de once observaciones no podemos calcular la tendencia para los primeros cinco ni para los ultimos cinco años. En Python aparecen como `NaN`.
-
-### Idea para recordar
-
-Una ventana mayor produce una tendencia mas suave, pero elimina mas observaciones en los extremos y puede ocultar movimientos relevantes.
-
-## 6. Filtro Hodrick-Prescott
-
-### Microresumen teorico
-
-El filtro HP elige una tendencia que equilibra dos objetivos:
-
-1. Que las diferencias entre la serie y la tendencia sean pequeñas.
-2. Que la pendiente de la tendencia no cambie bruscamente.
-
-De forma simplificada, minimiza:
-
-```text
-suma(ciclo_t^2) + lambda * suma(cambio_en_pendiente_t^2)
+```python
+plt.plot(df["year"], df["ciclo"])
+plt.axhline(0, color="black", linestyle="--")
 ```
 
-`lambda` controla el castigo a los cambios de pendiente. Cuanto mayor es, mas suave resulta la tendencia. Para datos anuales, la clase utiliza `lambda=100`.
+Arriba de cero = auge; abajo = recesion.
 
-### En Python lo hacemos asi
+---
+
+## 7. Filtro de Hodrick-Prescott
+
+### Teoria
+
+HP tambien parte de $y_t = y_t^g + y_t^c$, pero obtiene la descomposicion
+resolviendo un problema de optimizacion:
+
+$$\min_{y_t^g,\, y_t^c} \;\; \sum_{t=0}^{T} \left(y_t^c\right)^2 \;+\; \gamma \sum_{t=1}^{T-1}\left[\left(y_{t+1}^g - y_t^g\right) - \left(y_t^g - y_{t-1}^g\right)\right]^2$$
+
+con $\gamma > 0$. Como $y_t^c = y_t - y_t^g$, se reescribe dependiendo solo de la
+tendencia:
+
+$$\min_{y_t^g} \;\; \sum_{t=0}^{T}\left(y_t - y_t^g\right)^2 \;+\; \gamma \sum_{t=1}^{T-1}\left[\left(y_{t+1}^g - y_t^g\right) - \left(y_t^g - y_{t-1}^g\right)\right]^2$$
+
+### Como entender los dos terminos
+
+**Primer termino**: quiere que el ciclo sea chico, es decir que la tendencia pegue
+lo mas cerca posible de los datos. Si fuera lo unico, la solucion seria trivial:
+$y_t^g = y_t$, ciclo cero. Pero esa tendencia oscilaria con el ciclo, y entonces
+no serviria como "tendencia".
+
+**Segundo termino**: penaliza los **cambios en la pendiente** de la tendencia. Si
+la derivada hacia atras $(y_t^g - y_{t-1}^g)$ es muy distinta de la derivada hacia
+adelante $(y_{t+1}^g - y_t^g)$, esa diferencia se eleva al cuadrado y se multiplica
+por $\gamma$. Es lo que impide la solucion trivial.
+
+**$\gamma$ es el trade-off**: cuanto mas grande, mas se castiga que la tendencia
+se curve, y por lo tanto mas parecida a una recta queda.
+
+### Para que sirve
+
+Es el metodo estandar en macroeconomia para estimar producto potencial y brecha
+del producto (output gap). A diferencia de la media movil, **no pierde
+observaciones en las puntas**.
+
+### Codigo generico
 
 ```python
 from statsmodels.tsa.filters.hp_filter import hpfilter
 
-cycle, trend = hpfilter(df['log_pbi'], lamb=100)
-df['y_g'] = trend
-df['y_c'] = cycle
+cycle, trend = hpfilter(df["log_pbi"], lamb=100)
+
+df["y_c"] = cycle
+df["y_g"] = trend
 ```
 
-`hpfilter` devuelve primero el ciclo y despues la tendencia. Conviene respetar ese orden para no intercambiar las interpretaciones.
+**Trampa de la funcion**: `hpfilter` devuelve **(ciclo, tendencia)** en ese orden.
+Es contraintuitivo y es el error mas comun. Si el "ciclo" te queda con forma de
+serie creciente, invertiste el orden.
 
-### Salida del ejemplo argentino
+### Valores tipicos de $\lambda$
+
+| Frecuencia | $\lambda$ |
+|---|---|
+| Anual | 100 (a veces 6.25) |
+| Trimestral | 1600 |
+| Mensual | 14400 |
+
+En la practica se pide $\lambda = 100$ porque los datos son anuales.
+
+### Que pasa si $\gamma$ (o $\lambda$) es mayor
+
+Es la pregunta con la que cierra el PDF. Respuesta verificada sobre el PBI de
+EEUU:
 
 ```text
-Año    log(PBI)   Tendencia HP   Ciclo HP
-1963   12.508431      12.578466  -0.070035
-1998   13.467203      13.364598   0.102605
-2002   13.264402      13.443636  -0.179234
+lambda =     6.25  ->  desvio del ciclo = 0.0296
+lambda =      100  ->  desvio del ciclo = 0.0550
+lambda =     1600  ->  desvio del ciclo = 0.0750
+lambda =    10000  ->  desvio del ciclo = 0.0801
 ```
 
-### Que significa esta salida
+**A mayor $\lambda$, la tendencia se vuelve mas rigida (tiende a una recta) y por
+lo tanto el ciclo absorbe mas variabilidad.** En el limite $\lambda \to \infty$ la
+tendencia es exactamente una recta y el filtro coincide con la tendencia
+deterministica del punto 6 del PDF.
 
-HP y la media movil cuentan una historia parecida en estos años, aunque no producen valores identicos. En 2002, por ejemplo, ambos metodos detectan una brecha negativa grande.
+En el limite opuesto, $\lambda \to 0$, la tendencia se pega a los datos y el ciclo
+tiende a cero.
 
-### Diferencia frente a la media movil
+---
 
-- HP produce estimaciones en los extremos de la muestra.
-- La media movil centrada pierde cinco datos en cada extremo.
-- HP depende de `lambda`; la media movil depende del ancho de ventana.
-- Ninguno revela una tendencia verdadera: ambos construyen una estimacion.
+# Parte C - Ejercitacion 2
+
+## 8. Ejercicio 1: mixtura de dos normales con la misma media
+
+### Enunciado
+
+$$f(x) = 0.4\,\varphi_1(x) + 0.6\,\varphi_2(x), \qquad X_1 \sim N(-1,\,9),\; X_2 \sim N(-1,\,4)$$
+
+### Codigo
+
+```python
+import numpy as np, pandas as pd
+import scipy.stats as stats
+
+w1, mu1, var1 = 0.4, -1, 9
+w2, mu2, var2 = 0.6, -1, 4
+
+z = np.arange(-10, 10.05, 0.1)
+df = pd.DataFrame({"z": z})
+
+df["pdf_1"]    = stats.norm.pdf(df["z"], loc=mu1, scale=np.sqrt(var1))  # scale=3
+df["pdf_2"]    = stats.norm.pdf(df["z"], loc=mu2, scale=np.sqrt(var2))  # scale=2
+df["pdf_mixt"] = w1*df["pdf_1"] + w2*df["pdf_2"]
+```
+
+### Momentos (mismas formulas que Clase 1)
+
+```python
+mu_mix  = w1*mu1 + w2*mu2
+var_mix = w1*(var1 + (mu1-mu_mix)**2) + w2*(var2 + (mu2-mu_mix)**2)
+
+mu_3 = (w1*((mu1-mu_mix)**3 + 3*(mu1-mu_mix)*var1)
+      + w2*((mu2-mu_mix)**3 + 3*(mu2-mu_mix)*var2))
+mu_4 = (w1*((mu1-mu_mix)**4 + 6*(mu1-mu_mix)**2*var1 + 3*var1**2)
+      + w2*((mu2-mu_mix)**4 + 6*(mu2-mu_mix)**2*var2 + 3*var2**2))
+
+skew = mu_3 / var_mix**1.5
+kurt = mu_4 / var_mix**2
+```
+
+### Salida verificada
+
+```text
+media     = -1.0000
+varianza  =  6.0000     desvio = 2.4495
+asimetria =  0.0000
+curtosis  =  3.5000     en exceso = 0.5000
+```
+
+### Respuestas
+
+**(b) Es asimetrica?** **No.** Es perfectamente simetrica, y se ve en el grafico:
+las dos componentes tienen **la misma media** $\mu = -1$, entonces cada una es
+simetrica alrededor del mismo punto y la mezcla tambien lo es. El calculo lo
+confirma: $S = 0$ exacto.
+
+**(c)** Media $-1$, varianza $6$, asimetria $0$, curtosis $3.5$.
+
+Notar que la varianza $= 0.4(9) + 0.6(4) = 6$: cuando las medias coinciden, el
+termino $(\mu_i - \mu_{mix})^2$ se anula y la varianza es el simple promedio
+ponderado de las varianzas.
+
+**(d) Es leptocurtica?** **Si**: $K = 3.5 > 3$, o sea $K_E = 0.5 > 0$.
+
+Esta es la leccion del ejercicio: **una mixtura puede ser simetrica y aun asi
+tener colas mas pesadas que la normal.** Mezclar dos normales con varianzas
+distintas (9 y 4) genera exceso de curtosis aunque no genere asimetria.
+
+En el grafico contra la normal equivalente $N(-1, 6)$ se ve el patron tipico de
+leptocurtosis: **mas alta en el centro, mas baja en los hombros, mas alta en las
+colas.**
+
+---
+
+## 9. Ejercicio 2: mixtura bimodal
+
+### Enunciado
+
+$$f(x) = 0.35\,\varphi_1(x) + 0.65\,\varphi_2(x), \qquad X_1 \sim N(1.2,\,0.09),\; X_2 \sim N(-0.8,\,0.81)$$
+
+### Salida verificada
+
+```text
+media     = -0.1000
+varianza  =  1.4680     desvio = 1.2116
+asimetria = -0.2456
+curtosis  =  2.0004     en exceso = -0.9996
+
+modas locales del grafico: z = -0.80  y  z = 1.19
+```
+
+### Respuestas al inciso (g), que es una trampa triple
+
+La pregunta es: *asimetrica positiva? leptocurtica? bimodal?* Las tres respuestas
+van contra la intuicion:
+
+| Pregunta | Respuesta | Por que |
+|---|---|---|
+| Asimetrica **positiva**? | **No: es negativa** ($S = -0.2456$) | la componente pesada (peso 0.65) esta a la izquierda y es la mas dispersa |
+| **Leptocurtica**? | **No: es platicurtica** ($K = 2.00 < 3$) | $K_E = -1.00$, colas mas livianas que la normal |
+| **Bimodal**? | **Si**, con modas en $-0.80$ y $1.19$ | las medias estan lejos respecto de los desvios (0.3 y 0.9) |
+
+### Por que este caso es tan distinto al Ejercicio 1
+
+En el Ejercicio 1 las medias coincidian y las varianzas diferian: eso genera
+**exceso de curtosis sin asimetria**.
+
+Aca las medias estan **muy separadas** ($1.2$ vs $-0.8$) respecto de los desvios
+($0.3$ y $0.9$). Cuando las componentes se separan tanto, la densidad se parte en
+dos jorobas y la masa se distribuye "hacia los costados en vez de hacia las
+colas": el resultado es **platicurtico**, la forma achatada.
+
+### Como saberlo de antemano
+
+Regla practica: si la distancia entre las medias es grande respecto de los
+desvios, la mixtura tiende a ser **bimodal y platicurtica**. Si las medias son
+parecidas pero las varianzas muy distintas, tiende a ser **unimodal y
+leptocurtica**.
 
 ### Idea para recordar
 
-Si aumenta `lambda`, la tendencia se vuelve mas suave y una mayor parte de las fluctuaciones queda asignada al ciclo.
+**Bimodal y platicurtica van juntas.** Y una curtosis menor a 3 no significa
+"menos riesgo": significa que la forma no se parece a una normal, en la direccion
+opuesta a la habitual.
 
-## 7. Practica 2, ejercicio 1 - Mixtura simetrica y leptocurtica
+---
 
-### Que hacemos en la practica
+## 10. Generar una muestra de la mixtura y hacer el QQ plot
 
-Mezclamos:
+### Teoria
 
-```text
-0.40 * N(-1,9) + 0.60 * N(-1,4)
-```
+Para simular una mixtura se hace exactamente lo que dice la definicion: se sortea
+de que componente sale cada observacion.
 
-Las dos normales tienen la misma media, pero distintas varianzas.
-
-### En Python lo hacemos asi
-
-```python
-w1, mu1, var1 = 0.40, -1, 9
-w2, mu2, var2 = 0.60, -1, 4
-
-df['pdf_1'] = stats.norm.pdf(df['z'], loc=mu1, scale=3)
-df['pdf_2'] = stats.norm.pdf(df['z'], loc=mu2, scale=2)
-df['pdf_mix'] = w1 * df['pdf_1'] + w2 * df['pdf_2']
-```
-
-### Salida teorica
-
-```text
-Media: -1.0
-Varianza: 6.0
-Asimetria: 0.0
-Curtosis: 3.5
-```
-
-### Que significa esta salida
-
-- La mixtura es simetrica porque ambos componentes estan centrados en `-1`.
-- Es leptocurtica porque su curtosis `3.5` es mayor que `3`.
-- Puede ser simetrica y no ser normal: simetria no implica normalidad.
-
-### Simulacion de 2000 observaciones
+### Codigo generico
 
 ```python
 n = 2000
+
 x1 = np.random.normal(mu1, np.sqrt(var1), size=n)
 x2 = np.random.normal(mu2, np.sqrt(var2), size=n)
-selector = np.random.uniform(size=n)
-muestra = np.where(selector < w1, x1, x2)
+u  = np.random.uniform(size=n)
+
+muestra = np.where(u < w1, x1, x2)   # con prob w1 toma x1, si no x2
 ```
 
-El notebook guardo una muestra con media `-0.9279`, desvio `2.4601`, asimetria `0.1266` y exceso de curtosis `0.7332`.
+`np.where(u < w1, x1, x2)` es la clave: la uniforme decide componente por
+componente con la probabilidad correcta.
 
-Estos valores no coinciden exactamente con los teoricos por variabilidad muestral. Ademas, el notebook no fija una semilla aleatoria, por lo que cambian en cada ejecucion. Teoricamente esperamos media `-1`, desvio `sqrt(6)=2.4495`, asimetria `0` y exceso de curtosis `0.5`.
-
-### Idea para recordar
-
-Los parametros teoricos describen la poblacion. Los estadisticos calculados sobre 2000 simulaciones son aproximaciones aleatorias a esos parametros.
-
-## 8. Practica 2, ejercicio 2 - Mixtura asimetrica
-
-### Que hacemos en la practica
-
-Mezclamos:
-
-```text
-0.35 * N(1.2,0.09) + 0.65 * N(-0.8,0.81)
-```
-
-Ahora cambian las medias, las varianzas y los pesos. La densidad puede mostrar dos zonas de concentracion y no tiene por que ser simetrica.
-
-### Salida teorica
-
-```text
-Media: -0.10
-Varianza: 1.468
-Asimetria: -0.24558
-Curtosis: 2.00040
-```
-
-### Que significa esta salida
-
-- La asimetria es negativa, no positiva: la cola izquierda tiene mayor peso relativo.
-- La curtosis es menor que `3`, por lo que la distribucion es platicurtica, no leptocurtica.
-- El grafico es necesario para discutir bimodalidad; los momentos por si solos no dicen cuantos modos tiene una distribucion.
-
-La simulacion guardada arroja media `-0.0924`, desvio `1.1888`, asimetria `-0.1840` y exceso de curtosis `-1.0230`. Las diferencias con los valores teoricos son muestrales y cambian al volver a simular.
-
-### Idea para recordar
-
-No debemos decidir asimetria o curtosis solamente mirando el grafico. El grafico sugiere; los coeficientes permiten clasificar.
-
-## 9. Practica 2, ejercicio 3 - PBI real de Estados Unidos
-
-### Que hacemos en la practica
-
-Usamos la hoja `PBI Real USA` y descomponemos `ln(PBI)` mediante:
-
-1. Media movil centrada de once años.
-2. Filtro HP con `lambda=100`.
-
-Para cada metodo graficamos serie y tendencia, y luego el ciclo por separado.
-
-### En Python lo hacemos asi
+### QQ plot manual (el que pide la practica)
 
 ```python
-usa = pd.read_excel(
-    'Excels/MIA103_Clase_2.xlsx',
-    sheet_name='PBI Real USA',
-    usecols='B:C',
-    skiprows=10,
-    nrows=96
-)
+m_est = np.sort((muestra - muestra.mean()) / muestra.std())
+cuantiles_teoricos = stats.norm.ppf(np.arange(1, n+1) / n)
 
-usa['log_pbi'] = np.log(usa['GDPCA'])
-usa['tendencia_mm'] = usa['log_pbi'].rolling(11, center=True).mean()
-usa['ciclo_mm'] = usa['log_pbi'] - usa['tendencia_mm']
-usa['ciclo_hp'], usa['tendencia_hp'] = hpfilter(
-    usa['log_pbi'], lamb=100
-)
+plt.scatter(m_est, cuantiles_teoricos)
+plt.plot([-4, 4], [-4, 4], 'r--')
+plt.xlabel("Valores simulados estandarizados")
+plt.ylabel("Valores teoricos")
+plt.show()
 ```
 
-### Algunas salidas representativas
+La consigna pide **teoricos en el eje vertical** y **simulados estandarizados en
+el horizontal**, que es al reves de lo que hace `sm.qqplot`. Por eso conviene
+hacerlo a mano.
+
+### Como leer la salida
+
+| Ejercicio | Forma esperada | Lectura |
+|---|---|---|
+| Ej. 1 (leptocurtica, $K_E = 0.5$) | extremos que se despegan hacia afuera de la recta | colas mas pesadas que la normal |
+| Ej. 2 (platicurtica, $K_E = -1.0$) | extremos que se doblan hacia **adentro** de la recta | colas mas livianas; el centro se aparta por la bimodalidad |
+
+En el caso bimodal el QQ plot muestra ademas un "escalon" o cambio de pendiente
+en la zona central: es la firma grafica de las dos jorobas.
+
+### Nota tecnica
+
+`stats.norm.ppf(np.arange(1, n+1)/n)` genera un **infinito** en la ultima
+posicion, porque $\Phi^{-1}(1) = +\infty$. Es lo que hace el notebook de clase y
+funciona igual porque matplotlib ignora el punto, pero la version robusta es:
+
+```python
+cuantiles_teoricos = stats.norm.ppf((np.arange(1, n+1) - 0.5) / n)
+```
+
+---
+
+## 11. Ejercicio 3: descomponer el PBI de EEUU
+
+### Enunciado
+
+Descomponer el PBI de EEUU en tendencia y ciclo con (1) filtro HP con
+$\lambda = 100$ y (2) medias moviles de 11 observaciones. Graficar serie
+observada + tendencia por un lado, y ciclo por otro. **Trabajar en logaritmos.**
+
+### Codigo completo
+
+```python
+import pandas as pd, numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.filters.hp_filter import hpfilter
+
+df = pd.read_excel("Excels/MIA103_Clase_2.xlsx", sheet_name="PBI Real USA",
+                   usecols="B:C", skiprows=10, nrows=96)
+
+df = df.sort_values("Año").reset_index(drop=True)
+df["log_pbi"] = np.log(df["GDPCA"])
+
+# (2) medias moviles
+df["ygmm"]     = df["log_pbi"].rolling(window=11, center=True).mean()
+df["ciclo_mm"] = df["log_pbi"] - df["ygmm"]
+
+# (1) filtro HP
+cycle, trend = hpfilter(df["log_pbi"], lamb=100)
+df["y_c"], df["y_g"] = cycle, trend
+
+# graficos: serie + tendencia
+plt.plot(df["Año"], df["log_pbi"], label="log(PBI)")
+plt.plot(df["Año"], df["y_g"], "--", label="Tendencia HP")
+plt.legend(); plt.show()
+
+# graficos: ciclo
+plt.plot(df["Año"], df["y_c"], label="Ciclo HP")
+plt.axhline(0, color="gray", linestyle="--")
+plt.legend(); plt.show()
+```
+
+### Salida verificada
 
 ```text
-Año   Ciclo MM11   Ciclo HP
-1934   -0.113018   -0.095223
-2008    0.016819    0.012563
-2009   -0.027917   -0.029594
-2020         NaN   -0.028982
-2023         NaN    0.005858
+periodo: 1929 - 2023 (95 observaciones)
+crecimiento logaritmico promedio anual: 3.12 %
+
+desvio del ciclo HP (lambda=100): 0.0550
+desvio del ciclo por media movil: 0.0525
+
+5 peores anios del ciclo HP          5 mejores anios del ciclo HP
+1933   -0.1653                        1944   +0.2055
+1932   -0.1303                        1929   +0.1950
+1949   -0.0961                        1943   +0.1889
+1934   -0.0952                        1945   +0.1455
+1938   -0.0941                        1942   +0.1007
 ```
 
-### Que significa esta salida
+### Como leer la salida
 
-- En 1934 la economia seguia claramente por debajo de su tendencia estimada.
-- En 2008 todavia aparece levemente por encima de tendencia anual, mientras que en 2009 la brecha se vuelve negativa.
-- En 2020 HP detecta una brecha negativa. La media movil centrada no puede calcularla porque faltan cinco años futuros.
-- Los metodos no tienen por que ubicar exactamente el mismo punto de giro.
+Este es el mejor control de sanidad posible: **los resultados coinciden con la
+historia economica**.
 
-### Idea para recordar
+- Los peores anios son **1932-1934**: la Gran Depresion. Un ciclo de $-0.165$
+  significa que el PBI estuvo aproximadamente **16.5% por debajo de su
+  tendencia**.
+- Los mejores son **1942-1945**: la movilizacion industrial de la Segunda Guerra
+  Mundial. En 1944 el PBI estuvo 20% **por encima** de la tendencia.
+- 1929 aparece alto porque es el pico previo al crack; el filtro lo lee como auge
+  respecto de la tendencia de largo plazo.
 
-La estimacion del ciclo depende del filtro. Siempre debemos informar el metodo y su parametro antes de interpretar una brecha como auge o recesion.
+Si tus peores anios no son los de la Depresion, algo esta mal: probablemente
+invertiste `cycle, trend`.
 
-## Cierre de la Clase 2
+### Comparacion de los dos metodos
 
-Al terminar esta clase deberiamos poder explicar:
+```text
+                      HP (lambda=100)      Media movil (11)
+observaciones utiles  todas (95)           85 (pierde 5 y 5)
+desvio del ciclo      0.0550               0.0525
+```
 
-1. La diferencia entre PBI nominal y real.
-2. La diferencia entre crecimiento acumulado y promedio anual.
-3. Por que usamos logaritmos y como se interpreta una diferencia logaritmica.
-4. La descomposicion `serie = tendencia + ciclo`.
-5. Como funciona una media movil centrada y por que pierde extremos.
-6. Que optimiza el filtro HP y que efecto tiene `lambda`.
-7. Por que dos metodos de tendencia generan ciclos distintos.
-8. La diferencia entre momentos teoricos y estadisticos de una simulacion.
-9. Por que simetria, normalidad, curtosis y bimodalidad son propiedades diferentes.
+Los dos ciclos son muy parecidos en el centro de la muestra. La diferencia
+practica es que **HP cubre toda la serie** y la media movil pierde las puntas, que
+suelen ser justamente los anios que mas interesan (los mas recientes).
 
-## Observaciones tecnicas antes de ejecutar
+La contracara: HP en las puntas es menos confiable de lo que parece (problema de
+"end-point bias"), solo que en vez de devolver `NaN` devuelve un numero.
 
-- `MIA103_2026_Clase_02_Ejercicio_3.ipynb` busca `MIA103_Clase_2.xlsx` en su directorio actual. El archivo esta en `Excels/`, por lo que hay que usar la ruta indicada en esta guia o mover el directorio de trabajo.
-- `MIA103_2026_Clase_02_PBI_Argentina.ipynb` busca `year_gdp_Argentina.csv`, que no esta en el repositorio. El Excel nuevo contiene los datos argentinos en `PBI Real Arg`, pero llega hasta 2019 y usa una version de la serie distinta de la salida 1950-2023 guardada en el notebook.
-- Los ejercicios de simulacion no fijan `np.random.seed(...)`; por eso sus salidas cambian en cada ejecucion.
+---
+
+## 12. Errores frecuentes
+
+| Error | Por que pasa | Como se evita |
+|---|---|---|
+| `trend, cycle = hpfilter(...)` | el orden real es al reves | `cycle, trend = hpfilter(...)` |
+| Media movil desfasada | falta `center=True` | `rolling(window=11, center=True)` |
+| Descomponer la serie en niveles | el ciclo queda en unidades, no en % | tomar `np.log()` primero |
+| Promediar tasas anuales sumando | el crecimiento es multiplicativo | $(1+g_{acum})^{1/n}-1$ |
+| Leer $g_{acum}=1.6085$ como 1.6% | es 160.85% | multiplicar por 100 al final |
+| `scale=varianza` en `norm.pdf` | scipy pide desvio | `scale=np.sqrt(var)` |
+| Asumir que bimodal implica leptocurtica | es al reves | bimodal tiende a **platicurtica** |
+| Olvidar los `NaN` de la media movil | son estructurales | `.dropna()` antes de estadisticos del ciclo |
+| No ordenar por anio | el Excel/csv puede venir desordenado | `sort_values(...).reset_index(drop=True)` |
+
+---
+
+## 13. Checklist de Clase 2
+
+Al terminar deberias poder:
+
+1. Definir PBI nominal y real y explicar que aisla cada uno.
+2. Calcular tasa de crecimiento, acumulada y promedio anual.
+3. Justificar por que la tasa promedio usa radicacion y no promedio simple.
+4. Explicar por que en escala logaritmica la pendiente es la tasa de crecimiento.
+5. Escribir $y_t = y_t^g + y_t^c$ e interpretar el signo del ciclo.
+6. Explicar por que la descomposicion se hace en logaritmos.
+7. Calcular una media movil centrada y decir cuantos datos se pierden y por que.
+8. Justificar la eleccion de la ventana $2n+1$.
+9. Escribir el problema de optimizacion de HP y explicar los dos terminos.
+10. Explicar el rol de $\gamma$ (o $\lambda$) y que pasa en los dos limites.
+11. Elegir $\lambda$ segun la frecuencia de los datos.
+12. Comparar ventajas y desventajas de media movil vs HP.
+13. Calcular los cuatro momentos de una mixtura.
+14. Explicar por que una mixtura simetrica puede ser leptocurtica.
+15. Explicar por que una mixtura bimodal tiende a ser platicurtica.
+16. Simular una mixtura con `np.where` y una uniforme.
+17. Construir e interpretar un QQ plot en los dos casos.
+
+---
+
+## 14. Notas tecnicas
+
+- Dependencias: `pandas`, `numpy`, `matplotlib`, `scipy`, `statsmodels`,
+  `openpyxl`.
+- El notebook de Argentina lee `year_gdp_Argentina.csv`, que **no esta en el
+  repositorio**. Los datos equivalentes estan en `Excels/MIA103_Clase_2.xlsx`,
+  hoja `PBI Real Arg`. Fuente original: FRED, serie `RGDPNAARA666NRUG`.
+- El notebook del Ejercicio 3 lee `MIA103_Clase_2.xlsx` sin ruta; en el repo esta
+  en `Excels/`.
+- La lectura `usecols="B:C", skiprows=10, nrows=96` esta calibrada al layout
+  exacto de la hoja `PBI Real USA`. Si se edita el Excel, hay que recalibrar.
+- El Excel tiene ademas las hojas `Med Mov` y `HP`, que son la version en planilla
+  de lo mismo (el PDF menciona resolver HP con Solver).
+- `hpfilter` devuelve objetos `Series` alineados al indice del input: si el
+  DataFrame tiene indice raro, conviene `reset_index(drop=True)` antes.
